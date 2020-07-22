@@ -5,22 +5,21 @@
     </v-btn>
   </div>
 </template>
-<script>
-export default {
-  name: "Result",
-  props: {
-    displayUser: {
-      type: Object,
-      required: true,
-    },
-  },
-  computed: {
-    point() {
-      return this.$whim.state[this.displayUser.id];
-    },
-  },
-};
+
+<script lang="ts">
+import { Component, Prop, Vue } from "vue-property-decorator";
+import { User } from "@/types/User";
+
+@Component
+export default class ResultView extends Vue {
+  @Prop({ type: Object, required: true }) displayUser!: User;
+
+  get point() {
+    return this.$whim.state[this.displayUser.id];
+  }
+}
 </script>
+
 <style lang="scss" scoped>
 .subtitle {
   font-weight: 300;

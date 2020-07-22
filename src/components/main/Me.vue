@@ -17,22 +17,20 @@
     </v-row>
   </v-container>
 </template>
-<script>
-export default {
-  name: "Me",
-  data: () => {
-    return {
-      // TODO: アプリの設定で変更できるようにする
-      items: [0.5, 1, 2, 3, 4, 7, 8, 10],
-    };
-  },
-  methods: {
-    select(point) {
-      this.$whim.assignState({ [this.$whim.accessUser.id]: point });
-    },
-  },
-};
+
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+
+@Component
+export default class MeView extends Vue {
+  items = [0.5, 1, 2, 3, 4, 7, 8, 10];
+
+  select(point: number) {
+    this.$whim.assignState({ [this.$whim.accessUser.id]: point });
+  }
+}
 </script>
+
 <style lang="scss" scoped>
 .subtitle {
   font-weight: 300;

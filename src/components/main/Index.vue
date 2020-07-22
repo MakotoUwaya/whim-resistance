@@ -8,44 +8,44 @@
       </h2>
       <v-btn color="secondary" class="my-4" @click="reset">続ける</v-btn>
     </div>
-    <Me v-if="!isAccessUserSelected" class="me" />
+    <me-view v-if="!isAccessUserSelected" class="me" />
   </v-container>
 </template>
 
-<script>
-export default {
-  name: "Main",
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+import MeView from "@/components/main/Me.vue";
+
+@Component({
   components: {
-    Me: () => import("@/components/main/Me"),
+    MeView,
   },
-  computed: {
-    users() {
-      return this.$whim.users;
-    },
-    isAllSelected() {
-      return (
-        this.users.length > 0 &&
-        this.users.every((user) => this.$whim.state[user.id])
-      );
-    },
-    // TODO: 平均値を表示するか、最大値を表示するか設定できるようにする
-    average() {
-      let sum = 0;
-      for (const user of this.users) {
-        sum += Number(this.$whim.state[user.id]);
-      }
-      return sum / this.users.length;
-    },
-    isAccessUserSelected() {
-      return !!this.$whim.state[this.$whim.accessUser.id];
-    },
-  },
-  methods: {
-    reset() {
-      this.$whim.resetState();
-    },
-  },
-};
+})
+export default class MainView extends Vue {
+  get users() {
+    return this.$whim.users;
+  }
+  get isAllSelected() {
+    return (
+      this.users.length > 0 &&
+      this.users.every((user) => this.$whim.state[user.id])
+    );
+  }
+  // TODO: 平均値を表示するか、最大値を表示するか設定できるようにする
+  get average() {
+    let sum = 0;
+    for (const user of this.users) {
+      sum += this.$whim.state[user.id];
+    }
+    return sum / this.users.length;
+  }
+  get isAccessUserSelected() {
+    return !!this.$whim.state[this.$whim.accessUser.id];
+  }
+  reset() {
+    this.$whim.resetState();
+  }
+}
 </script>
 
 <style lang="scss" scoped>

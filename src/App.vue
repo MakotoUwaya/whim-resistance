@@ -1,34 +1,38 @@
 <template>
-  <v-app id="app">
-    <Main class="main" />
-
-    <Player
+  <v-app>
+    <main-view class="main" />
+    <player-view
       v-for="user in $whim.users"
       :key="user.id"
       :class="whimUserWindowClass(user)"
-      :displayUser="user"
+      :display-user="user"
     />
   </v-app>
 </template>
-<script>
-export default {
-  name: "App",
+
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+import MainView from "@/components/main/Index.vue";
+import PlayerView from "@/components/player/Index.vue";
+
+@Component({
   components: {
-    Main: () => import("@/components/main/Index"),
-    Player: () => import("@/components/player/Index"),
+    MainView,
+    PlayerView,
   },
+})
+export default class App extends Vue {
+  get users() {
+    return this.$whim.users;
+  }
+
   // settings for debug
   // mounted() {
-  //   let recaptchaScript = document.createElement("script");
+  //   const recaptchaScript = document.createElement("script");
   //   recaptchaScript.setAttribute("src", "http://localhost:8098");
   //   document.head.appendChild(recaptchaScript);
-  // },
-  computed: {
-    users() {
-      return this.$whim.users;
-    },
-  },
-};
+  // }
+}
 </script>
 
 <style lang="scss" scoped>
