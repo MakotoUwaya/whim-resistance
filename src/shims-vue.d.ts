@@ -8,21 +8,21 @@ declare module '*.vue' {
     interface Vue {
       $whim: {
         /** ルームに入っているユーザー一覧 */
-        users: User[],
+        users: User[];
         /** Room Object */
-        room: Room,
+        room: Room;
         /** 現在アクセスしているUser */
-        accessUser: User,
+        accessUser: User;
         /** ゲームの状態 */
-        state: State,
+        state: State;
         /** 画面の縦向き(portrait)or横向き(landscape) */
-        orientation: 'portrait' | 'landscape',
+        orientation: 'portrait' | 'landscape';
         /** ゲーム情報の差分更新を行います。v1.1よりネストしたオブジェクトも扱えるように更新されました。 */
-        assignState: (state: State) => void,
+        assignState: (state: Partial<State>) => void;
         /** stateの情報を削除します。引数はオプショナルです。引数を渡すと、その値に初期化されます。ゲームのはじめから機能等に有用です。 */
-        resetState: (state?: State) => void,
+        resetState: (state?: Partial<State>) => void;
         /** */
-        sound: (type: string) => void
+        sound: (type: string) => void;
       };
     }
   }

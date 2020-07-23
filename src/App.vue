@@ -1,8 +1,8 @@
 <template>
   <v-app>
-    <main-view class="main" />
+    <main-view class="main" @restart-game="restart" />
     <player-view
-      v-for="user in $whim.users"
+      v-for="user in users"
       :key="user.id"
       :class="whimUserWindowClass(user)"
       :display-user="user"
@@ -11,7 +11,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { User } from "@/types/User";
+import { GameState } from "@/utils/GameState";
 import MainView from "@/components/main/Index.vue";
 import PlayerView from "@/components/player/Index.vue";
 
@@ -26,12 +28,34 @@ export default class App extends Vue {
     return this.$whim.users;
   }
 
-  // settings for debug
-  // mounted() {
-  //   const recaptchaScript = document.createElement("script");
-  //   recaptchaScript.setAttribute("src", "http://localhost:8098");
-  //   document.head.appendChild(recaptchaScript);
-  // }
+  /** デバッグ表示 */
+  debugView() {
+    const recaptchaScript = document.createElement("script");
+    recaptchaScript.setAttribute("src", "http://localhost:8098");
+    document.head.appendChild(recaptchaScript);
+  }
+
+  mounted() {
+    // this.debugView();
+  }
+
+  @Watch("users")
+  addPlayers(newUsers: User[], oldUsers: User[]) {
+    if (newUsers.length === oldUsers.length) {
+      return;
+    }
+    console.info("Change users:", newUsers, oldUsers);
+    const gameState = new GameState(this.$whim.state);
+    for (const user of newUsers) {
+      gameState.addPlayer(user);
+    }
+    this.$whim.assignState(gameState.state);
+  }
+
+  restart() {
+    this.$whim.resetState();
+    this.addPlayers(this.users, []);
+  }
 }
 </script>
 
