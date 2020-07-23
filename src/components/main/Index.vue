@@ -2,7 +2,7 @@
   <v-container class="pa-0 ma-0">
     <!-- ゲーム開始前 待機状態 -->
     <div v-if="!isGameStarted" class="me">
-      <player-robby v-if="!isPlayerReady" />
+      <player-robby v-if="!isPlayerReady" :game-state="gameState" />
       <div v-else>
         <span class="subtitle"
           >他のプレイヤーが<br />準備ができるまで<br />お待ちください...</span
@@ -24,7 +24,7 @@
     </div>
     <!-- メンバー確定 投票 -->
     <div v-else-if="isGameStarted && !isAccessUserVoted" class="me">
-      <player-vote />
+      <player-vote :game-state="gameState" />
     </div>
     <!-- 投票結果確認 -->
     <div
@@ -55,7 +55,7 @@
       "
       class="me"
     >
-      <mission-execute />
+      <mission-execute :game-state="gameState" />
     </div>
     <!-- ミッション結果確認 -->
     <div
@@ -87,7 +87,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import { GameState } from "@/utils/GameState";
 import PlayerRobby from "@/components/main/PlayerRobby.vue";
 import PlayerVote from "@/components/main/PlayerVote.vue";
@@ -101,6 +101,8 @@ import MissionExecute from "@/components/main/MissionExecute.vue";
   },
 })
 export default class MainView extends Vue {
+  @Prop({ type: Object, required: true }) gameState!: GameState;
+
   get isPlayerReady() {
     if (!this.$whim.state.players || !this.$whim.accessUser.id) return false;
     const player = this.$whim.state.players?.find(
@@ -115,101 +117,80 @@ export default class MainView extends Vue {
     return this.$whim.state.isStarted;
   }
   get isAccessUserLeader() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.currentLeader?.id === this.$whim.accessUser.id;
+    return this.gameState.currentLeader?.id === this.$whim.accessUser.id;
   }
   get canMissionVote() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.canCurrentMissionVote;
+    return this.gameState.canCurrentMissionVote;
   }
   get isAccessUserVoted() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionPlayerVoted(this.$whim.accessUser.id);
+    return this.gameState.isCurrentMissionPlayerVoted(this.$whim.accessUser.id);
   }
   get isVoteComplete() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionVoteComplete;
+    return this.gameState.isCurrentMissionVoteComplete;
   }
   get isMissionApprove() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionApprove;
+    return this.gameState.isCurrentMissionApprove;
   }
   get missionApprovedCount() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.currentMissionApprovedCount;
+    return this.gameState.currentMissionApprovedCount;
   }
   get missionDisapprovedCount() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.currentMissionDisapprovedCount;
+    return this.gameState.currentMissionDisapprovedCount;
   }
   get canMissionExecute() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.canCurrentMissionExecute;
+    return this.gameState.canCurrentMissionExecute;
   }
   get isMissionMember() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionMember(this.$whim.accessUser.id);
+    return this.gameState.isCurrentMissionMember(this.$whim.accessUser.id);
   }
   get isAccessUserExecuted() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionPlayerExecuted(this.$whim.accessUser.id);
+    return this.gameState.isCurrentMissionPlayerExecuted(
+      this.$whim.accessUser.id
+    );
   }
   get isMissionComplete() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionExecuteComplete;
+    return this.gameState.isCurrentMissionExecuteComplete;
   }
   get isMissionSuccess() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionSuccess;
+    return this.gameState.isCurrentMissionSuccess;
   }
   get missionSuccessCount() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.currentMissionSuccessCount;
+    return this.gameState.currentMissionSuccessCount;
   }
   get missionFailCount() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.currentMissionFailCount;
+    return this.gameState.currentMissionFailCount;
   }
   get canStartNextPhase() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.canStartNextPhase;
+    return this.gameState.canStartNextPhase;
   }
 
   get successMissionCount() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.successMissionCount;
+    return this.gameState.successMissionCount;
   }
   get failMissionCount() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.failMissionCount;
+    return this.gameState.failMissionCount;
   }
   get isGameover() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isGameover;
+    return this.gameState.isGameover;
   }
   get isResistanceWin() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isResistanceWin;
+    return this.gameState.isResistanceWin;
   }
   get isSpyWin() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isSpyWin;
+    return this.gameState.isSpyWin;
   }
 
   checkVote() {
     this.$whim.assignState({ currentVoteChecked: true });
   }
   nextMission() {
-    const gameState = new GameState(this.$whim.state);
-    gameState.next();
-    this.$whim.assignState(gameState.state);
+    this.gameState.next();
+    this.$whim.assignState(this.gameState.state);
   }
   nextPhase() {
     this.$whim.assignState({ currentMissionResultChecked: true });
-
-    const gameState = new GameState(this.$whim.state);
-    gameState.next();
-    this.$whim.assignState(gameState.state);
+    this.gameState.next();
+    this.$whim.assignState(this.gameState.state);
   }
   reset() {
     this.$emit("restart-game");

@@ -21,21 +21,20 @@ import { GameState } from "@/utils/GameState";
 
 @Component
 export default class SelectPlayer extends Vue {
+  @Prop({ type: Object, required: true }) gameState!: GameState;
   @Prop({ type: Object, required: true }) displayUser!: User;
 
   get isUserAdded() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionPlayerAdded(this.displayUser.id);
+    return this.gameState.isCurrentMissionPlayerAdded(this.displayUser.id);
   }
 
   select() {
-    const gameState = new GameState(this.$whim.state);
-    const player = gameState.getPlayer(this.displayUser.id);
+    const player = this.gameState.getPlayer(this.displayUser.id);
     if (!player) {
       throw new Error("プレイヤー情報が取得できません");
     }
-    gameState.addCurrentMissionMember(player);
-    this.$whim.assignState(gameState.state);
+    this.gameState.addCurrentMissionMember(player);
+    this.$whim.assignState(this.gameState.state);
   }
 }
 </script>

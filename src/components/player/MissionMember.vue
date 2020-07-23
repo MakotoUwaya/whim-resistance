@@ -13,11 +13,11 @@ import { GameState } from "@/utils/GameState";
 
 @Component
 export default class MissionMember extends Vue {
+  @Prop({ type: Object, required: true }) gameState!: GameState;
   @Prop({ type: Object, required: true }) displayUser!: User;
 
   get isUserAdded() {
-    const gameState = new GameState(this.$whim.state);
-    return gameState.isCurrentMissionPlayerAdded(this.displayUser.id);
+    return this.gameState.isCurrentMissionPlayerAdded(this.displayUser.id);
   }
 }
 </script>

@@ -27,19 +27,20 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import { GameState } from "@/utils/GameState";
 
 @Component
 export default class MissionExecute extends Vue {
+  @Prop({ type: Object, required: true }) gameState!: GameState;
+
   execute(result: "成功" | "失敗") {
-    const gameState = new GameState(this.$whim.state);
-    const player = gameState.getPlayer(this.$whim.accessUser.id);
+    const player = this.gameState.getPlayer(this.$whim.accessUser.id);
     if (!player) {
       throw new Error("プレイヤー情報が取得できません");
     }
-    gameState.currentMissionExecute(player, result === "成功");
-    this.$whim.assignState(gameState.state);
+    this.gameState.currentMissionExecute(player, result === "成功");
+    this.$whim.assignState(this.gameState.state);
   }
 }
 </script>

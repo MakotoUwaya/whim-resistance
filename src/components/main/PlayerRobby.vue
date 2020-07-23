@@ -17,16 +17,17 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import { GameState } from "@/utils/GameState";
 
 @Component
 export default class PlayerRobby extends Vue {
+  @Prop({ type: Object, required: true }) gameState!: GameState;
+
   startGame() {
-    const gameState = new GameState(this.$whim.state);
-    gameState.setCanStartedPlayer(this.$whim.accessUser.id);
-    gameState.startGame();
-    this.$whim.assignState(gameState.state);
+    this.gameState.setCanStartedPlayer(this.$whim.accessUser.id);
+    this.gameState.startGame();
+    this.$whim.assignState(this.gameState.state);
   }
 }
 </script>

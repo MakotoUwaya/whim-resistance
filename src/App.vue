@@ -1,11 +1,12 @@
 <template>
   <v-app>
-    <main-view class="main" @restart-game="restart" />
+    <main-view class="main" :game-state="gameState" @restart-game="restart" />
     <player-view
       v-for="user in users"
       :key="user.id"
       :class="whimUserWindowClass(user)"
       :display-user="user"
+      :game-state="gameState"
     />
   </v-app>
 </template>
@@ -24,6 +25,9 @@ import PlayerView from "@/components/player/Index.vue";
   },
 })
 export default class App extends Vue {
+  get gameState() {
+    return new GameState(this.$whim.state);
+  }
   get users() {
     return this.$whim.users;
   }
@@ -45,11 +49,10 @@ export default class App extends Vue {
       return;
     }
     console.info("Change users:", newUsers, oldUsers);
-    const gameState = new GameState(this.$whim.state);
     for (const user of newUsers) {
-      gameState.addPlayer(user);
+      this.gameState.addPlayer(user);
     }
-    this.$whim.assignState(gameState.state);
+    this.$whim.assignState(this.gameState.state);
   }
 
   restart() {
