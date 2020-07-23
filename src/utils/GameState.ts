@@ -102,8 +102,7 @@ export class GameState {
     if (!this.state.players) return;
 
     const spyCount = this.rule.spyCount(this.state.players);
-    // TODO: リリースするときは Seed 値を Date.now() にする
-    const random = new Random();
+    const random = new Random(Date.now());
     while (
       this.state.players.filter((p) => p.role === 'spy').length < spyCount
     ) {
