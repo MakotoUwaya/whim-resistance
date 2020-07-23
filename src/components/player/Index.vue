@@ -6,7 +6,11 @@
       <span>{{ displayUser.name }} がリーダーですよ</span>
     </div>
     <div v-if="isSpy && isSpyUser" class="role-mark">
-      <span>スパイです</span>
+      <span v-if="isSpy">あなたは</span>
+      <span>スパイ です</span>
+    </div>
+    <div v-else-if="isMe" class="role-mark">
+      <span>あなたは レジスタンス です</span>
     </div>
     <select-player
       v-if="isAccessUserLeader && !canMissionVote"
