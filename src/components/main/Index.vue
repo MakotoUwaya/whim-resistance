@@ -1,7 +1,7 @@
 <template>
   <v-container class="pa-0 ma-0">
     <!-- ゲーム開始前 待機状態 -->
-    <div v-if="!isGameStarted" class="me">
+    <div v-if="stepWaiting" class="me">
       <player-robby v-if="!isPlayerReady" :game-state="gameState" />
       <div v-else>
         <span class="subtitle"
@@ -10,7 +10,7 @@
       </div>
     </div>
     <!-- リーダーがミッション遂行メンバーを選択 -->
-    <div v-else-if="isGameStarted && !canMissionVote" class="me">
+    <div v-else-if="stepSelecting" class="me">
       <div v-if="isAccessUserLeader">
         <span class="subtitle"
           >ミッションを<br />遂行するメンバーを<br />選んでください</span
@@ -23,11 +23,11 @@
       </div>
     </div>
     <!-- メンバー確定 投票 -->
-    <div v-else-if="isGameStarted && !isAccessUserVoted" class="me">
+    <div v-else-if="stepVoting && !isAccessUserVoted" class="me">
       <player-vote :game-state="gameState" />
     </div>
     <!-- 投票結果確認 -->
-    <div v-else-if="isVoteComplete && !canMissionExecute" class="me">
+    <div v-else-if="stepVoted" class="me">
       <v-col cols="12">
         <span class="subtitle">
           {{ isMissionApprove ? "承認" : "否認" }}<br />
@@ -37,35 +37,28 @@
           >
         </span>
       </v-col>
-      <v-btn
-        v-if="isMissionApprove && isAccessUserLeader"
-        color="secondary"
-        class="my-4"
-        @click="checkVote"
-        >ミッション開始！</v-btn
-      >
-      <v-btn
-        v-else-if="isAccessUserLeader"
-        color="secondary"
-        class="my-4"
-        @click="nextMission"
-        >{{ missionCountExceeded ? "次のフェーズへ" : "リーダー交代！" }}</v-btn
-      >
+      <template v-if="isAccessUserLeader">
+        <v-btn
+          v-if="isMissionApprove"
+          color="secondary"
+          class="my-4"
+          @click="checkVote"
+          >ミッション開始！</v-btn
+        >
+        <v-btn v-else color="secondary" class="my-4" @click="nextMission">{{
+          missionCountExceeded ? "次のフェーズへ" : "リーダー交代！"
+        }}</v-btn>
+      </template>
     </div>
     <!-- ミッション開始 -->
     <div
-      v-else-if="
-        canMissionExecute && !isAccessUserExecuted && !isMissionComplete
-      "
+      v-else-if="stepExecuting && isMissionMember && !isAccessUserExecuted"
       class="me"
     >
       <mission-execute :game-state="gameState" />
     </div>
     <!-- ミッション結果確認 -->
-    <div
-      v-else-if="isMissionComplete && !canStartNextPhase && !isGameover"
-      class="me"
-    >
+    <div v-else-if="stepExecuted" class="me">
       <v-col cols="12">
         <span class="subtitle">
           {{ isMissionSuccess ? "ミッション成功" : "ミッション失敗" }}<br />
@@ -81,7 +74,7 @@
       >
     </div>
     <!-- 最終結果確認 -->
-    <div v-else-if="isGameover" class="me">
+    <div v-else-if="stepFinish" class="me">
       <v-col cols="12">
         <span class="subtitle">
           {{ isResistanceWin ? "レジスタンスの勝ち！" : "スパイの勝ち！"
@@ -111,26 +104,42 @@ import MissionExecute from "@/components/main/MissionExecute.vue";
 export default class MainView extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
 
+  get currentStep() {
+    return this.gameState.currentStep;
+  }
+  get stepWaiting() {
+    return this.currentStep === "待機";
+  }
+  get stepSelecting() {
+    return this.currentStep === "選択";
+  }
+  get stepVoting() {
+    return this.currentStep === "投票";
+  }
+  get stepVoted() {
+    return this.currentStep === "投票確認";
+  }
+  get stepExecuting() {
+    return this.currentStep === "遂行";
+  }
+  get stepExecuted() {
+    return this.currentStep === "遂行確認";
+  }
+  get stepFinish() {
+    return this.currentStep === "終了";
+  }
+
   get accessUserID() {
     return this.$whim.accessUser.id;
   }
   get isPlayerReady() {
     return this.gameState.getPlayer(this.accessUserID)?.canStarted || false;
   }
-  get isGameStarted() {
-    return this.gameState.isGameStarted;
-  }
   get isAccessUserLeader() {
     return this.gameState.currentLeader?.id === this.accessUserID;
   }
-  get canMissionVote() {
-    return this.gameState.canCurrentMissionVote;
-  }
   get isAccessUserVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.accessUserID);
-  }
-  get isVoteComplete() {
-    return this.gameState.isCurrentMissionVoteComplete;
   }
   get missionCountExceeded() {
     return this.gameState.currentPhaseMissionCountExceeded;
@@ -144,17 +153,11 @@ export default class MainView extends Vue {
   get missionDisapprovedCount() {
     return this.gameState.currentMissionDisapprovedCount;
   }
-  get canMissionExecute() {
-    return this.gameState.canCurrentMissionExecute;
-  }
   get isMissionMember() {
     return this.gameState.isCurrentMissionMember(this.accessUserID);
   }
   get isAccessUserExecuted() {
     return this.gameState.isCurrentMissionPlayerExecuted(this.accessUserID);
-  }
-  get isMissionComplete() {
-    return this.gameState.isCurrentMissionExecuteComplete;
   }
   get isMissionSuccess() {
     return this.gameState.isCurrentMissionSuccess;
@@ -165,18 +168,11 @@ export default class MainView extends Vue {
   get missionFailCount() {
     return this.gameState.currentMissionFailCount;
   }
-  get canStartNextPhase() {
-    return this.gameState.canStartNextPhase;
-  }
-
   get successMissionCount() {
     return this.gameState.successMissionCount;
   }
   get failMissionCount() {
     return this.gameState.failMissionCount;
-  }
-  get isGameover() {
-    return this.gameState.isGameover;
   }
   get isResistanceWin() {
     return this.gameState.isResistanceWin;

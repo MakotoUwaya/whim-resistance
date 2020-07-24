@@ -2,6 +2,15 @@ import { Mission, Phase, Player, Rule, State } from '@/types';
 import { User } from '@/types/User';
 import Random from '@/types/Random';
 
+type CurrentStep =
+  | '待機' // waiting
+  | '選択' // selecting
+  | '投票' // voting
+  | '投票確認' // voted
+  | '遂行' // executing
+  | '遂行確認' // executed
+  | '終了'; // finish
+
 export class GameState {
   private readonly rule = new Rule();
   state!: State;
@@ -21,8 +30,24 @@ export class GameState {
 
   /* GameState computed */
 
-  get isGameStarted() {
-    return this.state.isStarted || false;
+  get currentStep() {
+    if (this.isGameover) {
+      return '終了';
+    } else if (this.state.isStarted) {
+      if (this.isCurrentMissionExecuteComplete && !this.canStartNextPhase) {
+        return '遂行確認';
+      } else if (this.canCurrentMissionExecute) {
+        return '遂行';
+      } else if (this.isCurrentMissionVoteComplete) {
+        return '投票確認';
+      } else if (this.canCurrentMissionVote) {
+        return '投票';
+      } else {
+        return '選択';
+      }
+    } else {
+      return '待機';
+    }
   }
   get currentPhase() {
     return this.state.phases
@@ -158,10 +183,6 @@ export class GameState {
     }
   }
   startGame() {
-    if (this.isGameStarted) {
-      console.error('既にゲームを開始しています');
-      return;
-    }
     if (!this.state.players || !this.rule.canStart(this.state.players)) {
       console.warn('プレイヤー参加数が足りません', this.state.players?.length);
       return;
