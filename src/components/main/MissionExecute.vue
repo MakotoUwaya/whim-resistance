@@ -13,6 +13,7 @@
         <span class="text-h3">○</span>
       </v-btn>
       <v-btn
+        v-if="isSpy"
         class="ma-4"
         x-large
         dark
@@ -33,6 +34,10 @@ import { GameState } from "@/utils/GameState";
 @Component
 export default class MissionExecute extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
+
+  get isSpy() {
+    return this.gameState.isSpyPlayer(this.$whim.accessUser.id);
+  }
 
   execute(result: "成功" | "失敗") {
     this.gameState.currentMissionExecute(
