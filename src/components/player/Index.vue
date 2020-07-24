@@ -3,7 +3,7 @@
     <!-- ゲーム開始前 待機状態 -->
     <!-- リーダーがミッション遂行メンバーを選択 -->
     <div v-if="isLeader" class="leader-mark">
-      <span>{{ displayUser.name }} がリーダーですよ</span>
+      <span v-if="!isMe">{{ displayUser.name }} が</span>リーダーですよ
     </div>
     <div v-if="isSpy && isSpyUser" class="role-mark">
       <span v-if="isSpy">あなたは</span>
