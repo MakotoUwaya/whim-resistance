@@ -5,12 +5,14 @@
     <div v-if="isLeader" class="leader-mark">
       <span v-if="!isMe">{{ displayUser.name }} が</span>リーダーですよ
     </div>
-    <div v-if="isSpy && isSpyUser" class="role-mark">
-      <span v-if="isSpy">あなたは</span>
-      <span>スパイ です</span>
+    <div
+      v-if="(isGameover && isSpyUser) || (isSpy && isSpyUser)"
+      class="role-mark"
+    >
+      <span v-if="isSpy">あなたは </span>スパイ です
     </div>
-    <div v-else-if="isGameStarted && isMe" class="role-mark">
-      <span>あなたは レジスタンス です</span>
+    <div v-else-if="isGameover || (isGameStarted && isMe)" class="role-mark">
+      <span v-if="isMe">あなたは </span>レジスタンス です
     </div>
     <select-player
       v-if="isAccessUserLeader && !canMissionVote"
