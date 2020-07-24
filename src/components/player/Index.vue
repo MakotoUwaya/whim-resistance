@@ -1,49 +1,48 @@
 <template>
   <v-container :class="{ border: isLeader }">
-    <!-- ゲーム開始前 待機状態 -->
-    <!-- リーダーがミッション遂行メンバーを選択 -->
-    <div
-      v-if="(isGameover && isSpyUser) || (isSpy && isSpyUser)"
-      class="role-mark"
-    >
-      <span v-if="isSpy">あなたは </span>スパイ です
+    <!-- 役割表示 -->
+    <div v-if="isSpy && isSpyUser" class="role-mark">
+      <span v-if="isMe">あなたは </span>スパイ です
     </div>
-    <div v-else-if="isGameover || (isGameStarted && isMe)" class="role-mark">
+    <div v-else-if="stepFinish || (!stepWaiting && isMe)" class="role-mark">
       <span v-if="isMe">あなたは </span>レジスタンス です
     </div>
+    <!-- ミッションメンバー表示 -->
+    <mission-member v-if="isMissionPlayerAdded" />
+
+    <!-- ゲーム開始前 待機状態 -->
+    <!-- リーダーがミッション遂行メンバーを選択 -->
     <select-player
-      v-if="isAccessUserLeader && !canMissionVote"
+      v-if="stepSelecting && isAccessUserLeader"
       class="container"
       :display-user="displayUser"
       :game-state="gameState"
     />
-    <mission-member v-if="isMissionPlayerAdded" />
     <!-- メンバー確定 投票 -->
-    <!-- 投票結果確認 -->
-    <template v-if="!canMissionExecute && !isGameover">
-      <approve-result
-        v-if="isVoteComplete"
-        :display-user="displayUser"
-        :is-approve="isPlayerApprove"
-        :game-state="gameState"
-      />
-      <h2 v-else-if="isAccessUserVoted && isPlayerVoted" class="subtitle">
+    <template v-else-if="stepVoting && isAccessUserVoted">
+      <h2 v-if="isPlayerVoted" class="subtitle">
         投票済み
       </h2>
-      <h2 v-else-if="isAccessUserVoted" class="subtitle">
+      <h2 v-else class="subtitle">
         投票中...
       </h2>
     </template>
+    <!-- 投票結果確認 -->
+    <approve-result
+      v-else-if="stepVoted"
+      :display-user="displayUser"
+      :is-approve="isPlayerApprove"
+      :game-state="gameState"
+    />
     <!-- ミッション開始 -->
     <!-- ミッション結果確認 -->
-    <template v-if="!canStartNextPhase && !isGameover">
-      <h2 v-if="isPlayerExecuted && !isMissionComplete" class="subtitle">
+    <template
+      v-else-if="stepExecuting && isAccessUserExecuted && isMissionMember"
+    >
+      <h2 v-if="isPlayerExecuted" class="subtitle">
         遂行済み
       </h2>
-      <h2
-        v-else-if="isAccessUserExecuted && !isMissionComplete"
-        class="subtitle"
-      >
+      <h2 v-else class="subtitle">
         遂行中...
       </h2>
     </template>
@@ -73,8 +72,29 @@ export default class PlayerView extends Vue {
   get accessUserID() {
     return this.$whim.accessUser.id;
   }
-  get isGameStarted() {
-    return this.gameState.isGameStarted;
+  get currentStep() {
+    return this.gameState.currentStep;
+  }
+  get stepWaiting() {
+    return this.currentStep === "待機";
+  }
+  get stepSelecting() {
+    return this.currentStep === "選択";
+  }
+  get stepVoting() {
+    return this.currentStep === "投票";
+  }
+  get stepVoted() {
+    return this.currentStep === "投票確認";
+  }
+  get stepExecuting() {
+    return this.currentStep === "遂行";
+  }
+  get stepExecuted() {
+    return this.currentStep === "遂行確認";
+  }
+  get stepFinish() {
+    return this.currentStep === "終了";
   }
   get isMe() {
     return this.accessUserID === this.displayUser.id;
@@ -85,17 +105,11 @@ export default class PlayerView extends Vue {
   get isSpyUser() {
     return this.gameState.isSpyPlayer(this.displayUser.id);
   }
-  get currentPhase() {
-    return this.gameState.currentPhase;
-  }
   get isLeader() {
     return this.gameState.currentLeader?.id === this.displayUser.id;
   }
   get isAccessUserLeader() {
     return this.gameState.currentLeader?.id === this.accessUserID;
-  }
-  get canMissionVote() {
-    return this.gameState.canCurrentMissionVote;
   }
   get isAccessUserVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.accessUserID);
@@ -111,26 +125,14 @@ export default class PlayerView extends Vue {
       this.gameState.isCurrentMissionPlayerApprove(this.displayUser.id) || false
     );
   }
-  get isVoteComplete() {
-    return this.gameState.isCurrentMissionVoteComplete || false;
-  }
-  get canMissionExecute() {
-    return this.gameState.canCurrentMissionExecute;
+  get isMissionMember() {
+    return this.gameState.isCurrentMissionMember(this.displayUser.id);
   }
   get isAccessUserExecuted() {
     return this.gameState.isCurrentMissionPlayerExecuted(this.accessUserID);
   }
   get isPlayerExecuted() {
     return this.gameState.isCurrentMissionPlayerExecuted(this.displayUser.id);
-  }
-  get isMissionComplete() {
-    return this.gameState.isCurrentMissionExecuteComplete;
-  }
-  get canStartNextPhase() {
-    return this.gameState.canStartNextPhase;
-  }
-  get isGameover() {
-    return this.gameState.isGameover;
   }
 }
 </script>
