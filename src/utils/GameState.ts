@@ -21,8 +21,8 @@ export class GameState {
 
   /* GameState computed */
 
-  get isStartedGame() {
-    return this.state.isStarted;
+  get isGameStarted() {
+    return this.state.isStarted || false;
   }
   get currentPhase() {
     return this.state.phases
@@ -147,7 +147,7 @@ export class GameState {
     }
   }
   startGame() {
-    if (this.isStartedGame) {
+    if (this.isGameStarted) {
       console.error('既にゲームを開始しています');
       return;
     }

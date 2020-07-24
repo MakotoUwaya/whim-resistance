@@ -122,7 +122,7 @@ export default class MainView extends Vue {
     return player.canStarted;
   }
   get isGameStarted() {
-    return this.$whim.state.isStarted;
+    return this.gameState.isGameStarted;
   }
   get isAccessUserLeader() {
     return this.gameState.currentLeader?.id === this.$whim.accessUser.id;

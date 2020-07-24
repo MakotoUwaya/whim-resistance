@@ -9,7 +9,7 @@
       <span v-if="isSpy">あなたは</span>
       <span>スパイ です</span>
     </div>
-    <div v-else-if="isMe" class="role-mark">
+    <div v-else-if="isGameStarted && isMe" class="role-mark">
       <span>あなたは レジスタンス です</span>
     </div>
     <select-player
@@ -71,6 +71,9 @@ export default class PlayerView extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
   @Prop({ type: Object, required: true }) displayUser!: User;
 
+  get isGameStarted() {
+    return this.gameState.isGameStarted;
+  }
   get isMe() {
     return this.$whim.accessUser.id === this.displayUser.id;
   }
