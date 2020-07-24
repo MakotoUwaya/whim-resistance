@@ -38,13 +38,17 @@
         </span>
       </v-col>
       <v-btn
-        v-if="isMissionApprove"
+        v-if="isMissionApprove && isAccessUserLeader"
         color="secondary"
         class="my-4"
         @click="checkVote"
         >ミッション開始！</v-btn
       >
-      <v-btn v-else color="secondary" class="my-4" @click="nextMission"
+      <v-btn
+        v-else-if="isAccessUserLeader"
+        color="secondary"
+        class="my-4"
+        @click="nextMission"
         >リーダー交代！</v-btn
       >
     </div>
@@ -68,7 +72,11 @@
           成功： {{ missionSuccessCount }} vs 失敗： {{ missionFailCount }}
         </span>
       </v-col>
-      <v-btn color="secondary" class="my-4" @click="nextPhase"
+      <v-btn
+        v-if="isAccessUserLeader"
+        color="secondary"
+        class="my-4"
+        @click="nextPhase"
         >次のミッションへ</v-btn
       >
     </div>
