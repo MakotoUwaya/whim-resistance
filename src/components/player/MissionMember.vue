@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isUserAdded" class="member-mark">
+  <div class="member-mark">
     <v-btn class="ma-2" fab x-large dark color="success">
       <v-icon>mdi-bullseye-arrow</v-icon>
     </v-btn>
@@ -7,19 +7,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import { User } from "@/types/User";
-import { GameState } from "@/utils/GameState";
+import { Component, Vue } from "vue-property-decorator";
 
 @Component
-export default class MissionMember extends Vue {
-  @Prop({ type: Object, required: true }) gameState!: GameState;
-  @Prop({ type: Object, required: true }) displayUser!: User;
-
-  get isUserAdded() {
-    return this.gameState.isCurrentMissionPlayerAdded(this.displayUser.id);
-  }
-}
+export default class MissionMember extends Vue {}
 </script>
 
 <style lang="scss" scoped>

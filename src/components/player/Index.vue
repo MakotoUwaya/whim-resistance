@@ -18,13 +18,8 @@
       :display-user="displayUser"
       :game-state="gameState"
     />
+    <mission-member v-if="isMissionPlayerAdded" />
     <!-- メンバー確定 投票 -->
-    <mission-member
-      v-if="canMissionVote"
-      class="container"
-      :display-user="displayUser"
-      :game-state="gameState"
-    />
     <!-- 投票結果確認 -->
     <template v-if="!canMissionExecute && !isGameover">
       <approve-result
@@ -102,6 +97,9 @@ export default class PlayerView extends Vue {
   }
   get isPlayerVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.displayUser.id);
+  }
+  get isMissionPlayerAdded() {
+    return this.gameState.isCurrentMissionPlayerAdded(this.displayUser.id);
   }
   get isPlayerApprove() {
     return (
