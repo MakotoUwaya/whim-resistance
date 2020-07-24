@@ -73,17 +73,20 @@ export default class PlayerView extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
   @Prop({ type: Object, required: true }) displayUser!: User;
 
+  get accessUserID() {
+    return this.$whim.accessUser.id;
+  }
   get isGameStarted() {
     return this.gameState.isGameStarted;
   }
   get isMe() {
-    return this.$whim.accessUser.id === this.displayUser.id;
+    return this.accessUserID === this.displayUser.id;
   }
   get isSpy() {
-    return this.checkSpyUser(this.$whim.accessUser.id);
+    return this.gameState.isSpyPlayer(this.accessUserID);
   }
   get isSpyUser() {
-    return this.checkSpyUser(this.displayUser.id);
+    return this.gameState.isSpyPlayer(this.displayUser.id);
   }
   get currentPhase() {
     return this.gameState.currentPhase;
@@ -92,13 +95,13 @@ export default class PlayerView extends Vue {
     return this.gameState.currentLeader?.id === this.displayUser.id;
   }
   get isAccessUserLeader() {
-    return this.gameState.currentLeader?.id === this.$whim.accessUser.id;
+    return this.gameState.currentLeader?.id === this.accessUserID;
   }
   get canMissionVote() {
     return this.gameState.canCurrentMissionVote;
   }
   get isAccessUserVoted() {
-    return this.gameState.isCurrentMissionPlayerVoted(this.$whim.accessUser.id);
+    return this.gameState.isCurrentMissionPlayerVoted(this.accessUserID);
   }
   get isPlayerVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.displayUser.id);
@@ -118,9 +121,7 @@ export default class PlayerView extends Vue {
     return this.gameState.canCurrentMissionExecute;
   }
   get isAccessUserExecuted() {
-    return this.gameState.isCurrentMissionPlayerExecuted(
-      this.$whim.accessUser.id
-    );
+    return this.gameState.isCurrentMissionPlayerExecuted(this.accessUserID);
   }
   get isPlayerExecuted() {
     return this.gameState.isCurrentMissionPlayerExecuted(this.displayUser.id);
@@ -133,11 +134,6 @@ export default class PlayerView extends Vue {
   }
   get isGameover() {
     return this.gameState.isGameover;
-  }
-
-  checkSpyUser(playerID: string) {
-    const player = this.$whim.state.players?.find((p) => p.id === playerID);
-    return player?.role === "spy";
   }
 }
 </script>

@@ -111,22 +111,23 @@ import MissionExecute from "@/components/main/MissionExecute.vue";
 export default class MainView extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
 
+  get accessUserID() {
+    return this.$whim.accessUser.id;
+  }
   get isPlayerReady() {
-    return (
-      this.gameState.getPlayer(this.$whim.accessUser.id)?.canStarted || false
-    );
+    return this.gameState.getPlayer(this.accessUserID)?.canStarted || false;
   }
   get isGameStarted() {
     return this.gameState.isGameStarted;
   }
   get isAccessUserLeader() {
-    return this.gameState.currentLeader?.id === this.$whim.accessUser.id;
+    return this.gameState.currentLeader?.id === this.accessUserID;
   }
   get canMissionVote() {
     return this.gameState.canCurrentMissionVote;
   }
   get isAccessUserVoted() {
-    return this.gameState.isCurrentMissionPlayerVoted(this.$whim.accessUser.id);
+    return this.gameState.isCurrentMissionPlayerVoted(this.accessUserID);
   }
   get isVoteComplete() {
     return this.gameState.isCurrentMissionVoteComplete;
@@ -147,12 +148,10 @@ export default class MainView extends Vue {
     return this.gameState.canCurrentMissionExecute;
   }
   get isMissionMember() {
-    return this.gameState.isCurrentMissionMember(this.$whim.accessUser.id);
+    return this.gameState.isCurrentMissionMember(this.accessUserID);
   }
   get isAccessUserExecuted() {
-    return this.gameState.isCurrentMissionPlayerExecuted(
-      this.$whim.accessUser.id
-    );
+    return this.gameState.isCurrentMissionPlayerExecuted(this.accessUserID);
   }
   get isMissionComplete() {
     return this.gameState.isCurrentMissionExecuteComplete;

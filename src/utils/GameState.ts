@@ -206,6 +206,10 @@ export class GameState {
     }
     this.nextMission(this.currentPhase, nextMissionLeader);
   }
+  isSpyPlayer(playerID: string) {
+    const player = this.getPlayer(playerID);
+    return player?.role === 'spy';
+  }
 
   /* Phase method */
 
