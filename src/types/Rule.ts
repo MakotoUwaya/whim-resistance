@@ -140,6 +140,6 @@ export class Rule {
     return voteLength >= playerLength;
   }
   isMissionApprove(playerLength = 10, approveLength = 0) {
-    return approveLength >= Math.ceil(playerLength / 2);
+    return approveLength > Math.ceil(playerLength / 2);
   }
 }
