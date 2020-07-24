@@ -29,11 +29,7 @@ export default class SelectPlayer extends Vue {
   }
 
   select() {
-    const player = this.gameState.getPlayer(this.displayUser.id);
-    if (!player) {
-      throw new Error("プレイヤー情報が取得できません");
-    }
-    this.gameState.addCurrentMissionMember(player);
+    this.gameState.addCurrentMissionMember(this.displayUser.id);
     this.$whim.assignState(this.gameState.state);
   }
 }

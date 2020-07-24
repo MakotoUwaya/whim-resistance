@@ -29,6 +29,9 @@ export class GameState {
       ? this.state.phases[this.state.phases.length - 1]
       : undefined;
   }
+  get currentPhaseMissionCountExceeded() {
+    return this.phaseMissionCountExceeded(this.currentPhase);
+  }
   get nextMissionLeader() {
     const currentPosition = this.currentLeader?.positionNumber || 0;
     const nextPosition =
@@ -131,14 +134,22 @@ export class GameState {
   }
 
   getPlayer(playerID: string) {
-    return this.state.players?.find((p) => p.id === playerID);
+    const player = this.state.players?.find((p) => p.id === playerID);
+    if (!player) {
+      console.error(
+        'プレイヤー情報が取得できません',
+        playerID,
+        this.state.players
+      );
+    }
+    return player;
   }
   addPlayer(user: User) {
-    if (!this.getPlayer(user.id)) {
-      const player = { ...user, cards: [], canStarted: false };
-      this.state.players?.push(player);
+    if (this.getPlayer(user.id)) {
+      return;
     }
-    return this.state.players;
+    const player = { ...user, cards: [], canStarted: false };
+    this.state.players?.push(player);
   }
   setCanStartedPlayer(playerID: string) {
     const player = this.state.players?.find((p) => p.id === playerID);
@@ -200,10 +211,6 @@ export class GameState {
 
   private nextMission(phase: Phase, missionLeader: Player) {
     if (!phase || !phase.missions) return;
-    if (phase.missions.length >= this.rule.maxMissionCount) {
-      phase.missionCountExceeded = true;
-      return;
-    }
     const mission = {
       members: [],
       votes: [],
@@ -218,7 +225,12 @@ export class GameState {
     if (!phase?.missions) return;
     return phase.missions[phase.missions.length - 1];
   }
-  addCurrentMissionMember(player: Player) {
+  phaseMissionCountExceeded(phase: Phase | undefined) {
+    return phase?.missionCountExceeded || false;
+  }
+  addCurrentMissionMember(playerID: string) {
+    const player = this.getPlayer(playerID);
+    if (!player) return;
     this.addMissionMember(this.currentMission, player);
   }
   isCurrentMissionPlayerAdded(playerID: string) {
@@ -235,12 +247,23 @@ export class GameState {
   }
   isFail(phase: Phase | undefined) {
     return (
-      phase?.missionCountExceeded ||
+      this.phaseMissionCountExceeded(phase) ||
       (this.isComplete(phase) && !this.isSuccess(phase))
     );
   }
-  currentMissionVote(player: Player, isApprove: boolean) {
+  currentMissionVote(playerID: string, isApprove: boolean) {
+    const player = this.getPlayer(playerID);
+    if (!player) return;
     this.vote(this.currentMission, player, isApprove);
+
+    if (
+      this.isCurrentMissionVoteComplete &&
+      this.currentPhase &&
+      this.currentPhase.missions &&
+      this.currentPhase.missions.length >= this.rule.maxMissionCount
+    ) {
+      this.currentPhase.missionCountExceeded = true;
+    }
   }
   isCurrentMissionPlayerVoted(playerID: string) {
     return this.isPlayerVoted(this.currentMission, playerID);
@@ -248,7 +271,9 @@ export class GameState {
   isCurrentMissionPlayerApprove(playerID: string) {
     return this.isPlayerApproved(this.currentMission, playerID);
   }
-  currentMissionExecute(player: Player, isSuccess: boolean) {
+  currentMissionExecute(playerID: string, isSuccess: boolean) {
+    const player = this.getPlayer(playerID);
+    if (!player) return;
     this.execute(this.currentMission, player, isSuccess);
   }
   isCurrentMissionMember(playerID: string) {

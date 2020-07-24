@@ -35,11 +35,10 @@ export default class MissionExecute extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
 
   execute(result: "成功" | "失敗") {
-    const player = this.gameState.getPlayer(this.$whim.accessUser.id);
-    if (!player) {
-      throw new Error("プレイヤー情報が取得できません");
-    }
-    this.gameState.currentMissionExecute(player, result === "成功");
+    this.gameState.currentMissionExecute(
+      this.$whim.accessUser.id,
+      result === "成功"
+    );
     this.$whim.assignState(this.gameState.state);
   }
 }

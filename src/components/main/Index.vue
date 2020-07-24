@@ -27,14 +27,14 @@
       <player-vote :game-state="gameState" />
     </div>
     <!-- 投票結果確認 -->
-    <div
-      v-else-if="isVoteComplete && isMissionMember && !canMissionExecute"
-      class="me"
-    >
+    <div v-else-if="isVoteComplete && !canMissionExecute" class="me">
       <v-col cols="12">
         <span class="subtitle">
           {{ isMissionApprove ? "承認" : "否認" }}<br />
           ○： {{ missionApprovedCount }} vs ×： {{ missionDisapprovedCount }}
+          <span v-if="missionCountExceeded"
+            ><br /><br />連続否認で<br />ミッションが失敗しました</span
+          >
         </span>
       </v-col>
       <v-btn
@@ -49,7 +49,7 @@
         color="secondary"
         class="my-4"
         @click="nextMission"
-        >リーダー交代！</v-btn
+        >{{ missionCountExceeded ? "次のフェーズへ" : "リーダー交代！" }}</v-btn
       >
     </div>
     <!-- ミッション開始 -->
@@ -112,14 +112,9 @@ export default class MainView extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
 
   get isPlayerReady() {
-    if (!this.$whim.state.players || !this.$whim.accessUser.id) return false;
-    const player = this.$whim.state.players?.find(
-      (p) => p.id === this.$whim.accessUser.id
+    return (
+      this.gameState.getPlayer(this.$whim.accessUser.id)?.canStarted || false
     );
-    if (!player) {
-      throw new Error("プレイヤー情報が取得できません");
-    }
-    return player.canStarted;
   }
   get isGameStarted() {
     return this.gameState.isGameStarted;
@@ -135,6 +130,9 @@ export default class MainView extends Vue {
   }
   get isVoteComplete() {
     return this.gameState.isCurrentMissionVoteComplete;
+  }
+  get missionCountExceeded() {
+    return this.gameState.currentPhaseMissionCountExceeded;
   }
   get isMissionApprove() {
     return this.gameState.isCurrentMissionApprove;

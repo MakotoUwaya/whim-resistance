@@ -21,11 +21,10 @@ export default class PlayerVote extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
 
   select(approve: "○" | "×") {
-    const player = this.gameState.getPlayer(this.$whim.accessUser.id);
-    if (!player) {
-      throw new Error("プレイヤー情報が取得できません");
-    }
-    this.gameState.currentMissionVote(player, approve === "○");
+    this.gameState.currentMissionVote(
+      this.$whim.accessUser.id,
+      approve === "○"
+    );
     this.$whim.assignState(this.gameState.state);
   }
 }
