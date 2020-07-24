@@ -1,5 +1,14 @@
 <template>
   <v-container class="pa-0 ma-0">
+    <template v-if="isVisibleTimer">
+      <component
+        :is="'count-down-timer'"
+        :is-abort="!isVisibleTimer"
+        :game-state="gameState"
+        :remain-time="currentRemainTime"
+        @time-up="timeUp"
+      />
+    </template>
     <!-- ゲーム開始前 待機状態 -->
     <div v-if="stepWaiting" class="me">
       <player-robby v-if="!isPlayerReady" :game-state="gameState" />
@@ -88,8 +97,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import { GameState } from "@/utils/GameState";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { CurrentStep, GameState } from "@/utils/GameState";
+import CountDownTimer, {
+  oneMinute,
+} from "@/components/main/CountDownTimer.vue";
 import PlayerRobby from "@/components/main/PlayerRobby.vue";
 import PlayerVote from "@/components/main/PlayerVote.vue";
 import MissionExecute from "@/components/main/MissionExecute.vue";
@@ -99,9 +111,12 @@ import MissionExecute from "@/components/main/MissionExecute.vue";
     PlayerRobby,
     PlayerVote,
     MissionExecute,
+    CountDownTimer,
   },
 })
 export default class MainView extends Vue {
+  remainTime = 9999;
+
   @Prop({ type: Object, required: true }) gameState!: GameState;
 
   get currentStep() {
@@ -181,20 +196,98 @@ export default class MainView extends Vue {
     return this.gameState.isSpyWin;
   }
 
+  get currentRemainTime() {
+    return (this.remainTime || 9999) * oneMinute;
+  }
+  get isVisibleTimer() {
+    return (
+      !this.gameState.state.isTimerHidden &&
+      this.currentRemainTime !== 9999 * oneMinute
+    );
+  }
+
+  @Watch("currentStep")
+  changedStep(newStep: CurrentStep, oldStep: CurrentStep) {
+    if (newStep === oldStep) {
+      return;
+    }
+    switch (newStep) {
+      case "選択":
+        this.remainTime = 5;
+        break;
+      case "投票":
+        this.remainTime = 3;
+        break;
+      case "投票確認":
+        this.remainTime = 3;
+        break;
+      case "遂行":
+        this.remainTime = 1;
+        break;
+      case "遂行確認":
+        this.remainTime = 3;
+        break;
+      default:
+        this.$whim.assignState({ isTimerHidden: true });
+        return;
+    }
+    this.timerRestart();
+  }
+
+  timerRestart() {
+    if (!this.isAccessUserLeader) {
+      return;
+    }
+    this.$whim.assignState({ isTimerHidden: true });
+    this.$whim.assignState({ isTimerHidden: false });
+  }
+
+  timeUp() {
+    if (!this.isAccessUserLeader) return;
+    switch (this.gameState.currentStep) {
+      case "選択":
+        this.gameState.autoSelectMissionMember();
+        this.assignState();
+        break;
+      case "投票":
+        this.gameState.autoVote();
+        this.assignState();
+        break;
+      case "投票確認":
+        if (this.isMissionApprove) {
+          this.checkVote();
+        } else {
+          this.nextMission();
+        }
+        break;
+      case "遂行":
+        this.gameState.autoExecute();
+        this.assignState();
+        break;
+      case "遂行確認":
+        this.nextPhase();
+        break;
+    }
+  }
   checkVote() {
     this.$whim.assignState({ currentVoteChecked: true });
   }
-  nextMission() {
+  next() {
     this.gameState.next();
-    this.$whim.assignState(this.gameState.state);
+    this.assignState();
+  }
+  nextMission() {
+    this.next();
   }
   nextPhase() {
     this.$whim.assignState({ currentMissionResultChecked: true });
-    this.gameState.next();
-    this.$whim.assignState(this.gameState.state);
+    this.next();
   }
   reset() {
     this.$emit("restart-game");
+  }
+  assignState() {
+    this.$whim.assignState(this.gameState.state);
   }
 }
 </script>
@@ -223,5 +316,19 @@ export default class MainView extends Vue {
   color: #526488;
   word-spacing: 5px;
   padding-bottom: 15px;
+}
+
+.countdown {
+  position: absolute;
+  top: 5vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: #000000;
+  color: #fff;
+  padding: 5px;
+  margin: 0px;
+  font: 40px "f5.6";
+  width: 140px;
 }
 </style>

@@ -6,4 +6,5 @@ export type State = {
   isStarted?: boolean;
   currentVoteChecked?: boolean;
   currentMissionResultChecked?: boolean;
+  isTimerHidden?: boolean;
 };
