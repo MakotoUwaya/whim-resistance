@@ -1,10 +1,7 @@
 <template>
-  <v-container>
+  <v-container :class="{ border: isLeader }">
     <!-- ゲーム開始前 待機状態 -->
     <!-- リーダーがミッション遂行メンバーを選択 -->
-    <div v-if="isLeader" class="leader-mark">
-      <span v-if="!isMe">{{ displayUser.name }} が</span>リーダーですよ
-    </div>
     <div
       v-if="(isGameover && isSpyUser) || (isSpy && isSpyUser)"
       class="role-mark"
@@ -169,5 +166,12 @@ export default class PlayerView extends Vue {
   color: #526488;
   word-spacing: 5px;
   padding-bottom: 15px;
+}
+
+.border {
+  box-sizing: border-box;
+  border-radius: 20px;
+  border-width: 10px;
+  box-shadow: 0 0 0 10px #67c5ff inset;
 }
 </style>
