@@ -347,7 +347,7 @@ export class GameState {
   }
 
   isPlayerAdded(mission: Mission | undefined, playerID: string) {
-    if (!mission?.members) return;
+    if (!mission?.members) return false;
     return !!mission.members.find((v) => v.player.id === playerID);
   }
 
@@ -368,7 +368,7 @@ export class GameState {
   }
 
   isPlayerVoted(mission: Mission | undefined, playerID: string) {
-    if (!mission?.votes) return;
+    if (!mission?.votes) return false;
     return (
       mission.votes.find((v) => v.player.id === playerID)?.isApprove !==
       undefined
@@ -376,7 +376,7 @@ export class GameState {
   }
 
   isPlayerApproved(mission: Mission | undefined, playerID: string) {
-    if (!mission?.votes) return;
+    if (!mission?.votes) return false;
     return (
       mission.votes.find((v) => v.player.id === playerID)?.isApprove || false
     );
@@ -415,7 +415,7 @@ export class GameState {
   }
 
   isPlayerSuccess(mission: Mission | undefined, playerID: string) {
-    if (!mission?.members) return;
+    if (!mission?.members) return false;
     return (
       mission.members.find((v) => v.player.id === playerID)?.isSuccess || false
     );
