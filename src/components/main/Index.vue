@@ -68,7 +68,7 @@
     >
       <v-col cols="12">
         <span class="subtitle">
-          {{ isMissionSuccess ? "成功" : "失敗" }}<br />
+          {{ isMissionSuccess ? "ミッション成功" : "ミッション失敗" }}<br />
           成功： {{ missionSuccessCount }} vs 失敗： {{ missionFailCount }}
         </span>
       </v-col>
