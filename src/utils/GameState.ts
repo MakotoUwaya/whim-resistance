@@ -134,6 +134,12 @@ export class GameState {
 
     const spyCount = this.rule.spyCount(this.state.players);
     const random = new Random(Date.now());
+    const resistanceImageIndex = random.suffleArray(
+      [...Array(7)].map((_, k) => k + 1)
+    );
+    const spyImageIndex = random.suffleArray(
+      [...Array(3)].map((_, k) => k + 1)
+    );
     while (
       this.state.players.filter((p) => p.role === 'spy').length < spyCount
     ) {
@@ -142,12 +148,14 @@ export class GameState {
       ];
       if (player.role === undefined) {
         player.role = 'spy';
+        player.image = `spy${spyImageIndex.pop()}.png`;
       }
     }
     for (const player of this.state.players.filter(
       (p) => p.role === undefined
     )) {
       player.role = 'resistance';
+      player.image = `resistance${resistanceImageIndex.pop()}.png`;
     }
   }
   private nextPhase() {
