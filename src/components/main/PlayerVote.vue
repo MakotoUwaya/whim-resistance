@@ -2,10 +2,10 @@
   <v-container>
     <span class="subtitle">投票してください</span>
     <v-col cols="12">
-      <v-btn class="ma-4" fab dark large color="primary" @click="select('○')">
+      <v-btn class="ma-4" fab dark large color="primary" @click="voting('○')">
         <span class="text-h4">○</span>
       </v-btn>
-      <v-btn class="ma-4" fab dark large color="primary" @click="select('×')">
+      <v-btn class="ma-4" fab dark large color="primary" @click="voting('×')">
         <span class="text-h4">×</span>
       </v-btn>
     </v-col>
@@ -13,19 +13,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import { GameState } from "@/utils/GameState";
+import { Component, Vue } from "vue-property-decorator";
 
 @Component
 export default class PlayerVote extends Vue {
-  @Prop({ type: Object, required: true }) gameState!: GameState;
-
-  select(approve: "○" | "×") {
-    this.gameState.currentMissionVote(
-      this.$whim.accessUser.id,
-      approve === "○"
-    );
-    this.$whim.assignState(this.gameState.state);
+  voting(approve: "○" | "×") {
+    this.$emit("voting", approve === "○");
   }
 }
 </script>
