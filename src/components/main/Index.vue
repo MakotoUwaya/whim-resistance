@@ -301,34 +301,4 @@ export default class MainView extends Vue {
   text-align: center;
   width: 400px;
 }
-
-.subtitle {
-  font-weight: 300;
-  font-size: 30px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.result {
-  font-weight: 500;
-  font-size: 60px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.countdown {
-  position: absolute;
-  top: 5vh;
-  left: 50vw;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  background: #000000;
-  color: #fff;
-  padding: 5px;
-  margin: 0px;
-  font: 40px "f5.6";
-  width: 140px;
-}
 </style>

@@ -1,7 +1,10 @@
 <template>
   <v-container :class="{ border: isLeader }">
     <!-- 役割表示 -->
-    <div v-if="isSpy && isSpyUser" class="role-mark">
+    <div
+      v-if="(stepFinish && isSpyUser) || (isSpy && isSpyUser)"
+      class="role-mark"
+    >
       <span v-if="isMe">あなたは </span>スパイ です
     </div>
     <div v-else-if="stepFinish || (!stepWaiting && isMe)" class="role-mark">
@@ -160,14 +163,6 @@ export default class PlayerView extends Vue {
   justify-content: center;
   top: 80px;
   text-align: center;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
 }
 
 .border {

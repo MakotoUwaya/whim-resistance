@@ -32,12 +32,4 @@ export default class PlayerRobby extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
-.subtitle {
-  font-weight: 300;
-  font-size: 30px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-</style>
+<style lang="scss" scoped></style>

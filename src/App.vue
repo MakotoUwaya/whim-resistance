@@ -62,13 +62,21 @@ export default class App extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .theme--light.v-application {
-  background: none;
+  background: none !important;
 }
 
 .main {
   position: relative;
   z-index: 1;
+}
+
+.subtitle {
+  font-weight: 300;
+  font-size: 30px;
+  color: #526488;
+  word-spacing: 5px;
+  padding-bottom: 15px;
 }
 </style>
