@@ -1,9 +1,7 @@
 <template>
-  <div>
-    <v-btn class="ma-2" fab large dark color="secondary">
-      <span class="text-h4">{{ isApprove ? "○" : "×" }}</span>
-    </v-btn>
-  </div>
+  <v-row class="justify-center">
+    <v-img :src="approveResultImage" :max-width="200" />
+  </v-row>
 </template>
 
 <script lang="ts">
@@ -14,6 +12,12 @@ import { User } from "@/types/User";
 export default class ApproveResult extends Vue {
   @Prop({ type: Object, required: true }) displayUser!: User;
   @Prop({ type: Boolean, required: true }) isApprove!: boolean;
+
+  get approveResultImage() {
+    return require(`../../assets/mark_${
+      this.isApprove ? "maru" : "batsu"
+    }.png`);
+  }
 }
 </script>
 

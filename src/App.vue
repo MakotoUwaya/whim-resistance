@@ -79,4 +79,8 @@ export default class App extends Vue {
   word-spacing: 5px;
   padding-bottom: 15px;
 }
+
+.image-button {
+  cursor: pointer;
+}
 </style>
