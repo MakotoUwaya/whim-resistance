@@ -30,3 +30,4 @@ declare module '*.vue' {
 
 declare module 'vuetify/lib/locale/ja';
 declare module 'whim-client-vue';
+declare module '@chenfengyuan/vue-countdown';

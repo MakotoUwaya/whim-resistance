@@ -8,6 +8,7 @@
     "lint": "eslint 'src/**/*.{ts,vue}' --config .eslintrc.js --fix"
   },
   "dependencies": {
+    "@chenfengyuan/vue-countdown": "^1.1.5",
     "core-js": "^3.6.5",
     "typescript": "^3.9.7",
     "vue": "^2.6.11",

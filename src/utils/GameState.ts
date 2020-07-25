@@ -2,7 +2,7 @@ import { Mission, Phase, Player, Rule, State } from '@/types';
 import { User } from '@/types/User';
 import Random from '@/types/Random';
 
-type CurrentStep =
+export type CurrentStep =
   | '待機' // waiting
   | '選択' // selecting
   | '投票' // voting
@@ -64,6 +64,9 @@ export class GameState {
         ? 1
         : currentPosition + 1;
     return this.state.players?.find((p) => p.positionNumber === nextPosition);
+  }
+  get isTimerHidden() {
+    return this.state.isTimerHidden;
   }
   get canStartNextPhase() {
     return this.state.currentMissionResultChecked || false;
@@ -159,7 +162,8 @@ export class GameState {
   }
 
   getPlayer(playerID: string) {
-    const player = this.state.players?.find((p) => p.id === playerID);
+    if (!this.state.players || this.state.players.length === 0) return;
+    const player = this.state.players.find((p) => p.id === playerID);
     if (!player) {
       console.error(
         'プレイヤー情報が取得できません',
@@ -342,9 +346,11 @@ export class GameState {
 
   isMissionExecuteCompleted(mission: Mission | undefined) {
     return (
-      mission?.members?.every(
+      !!mission?.members &&
+      mission.members.length > 0 &&
+      mission.members.every(
         (m) => m.isSuccess !== undefined && m.isSuccess !== null
-      ) || false
+      )
     );
   }
 
@@ -376,6 +382,26 @@ export class GameState {
     return !!mission.members.find((v) => v.player.id === playerID);
   }
 
+  autoSelectMissionMember() {
+    if (!this.currentMission || !this.state.players) {
+      return;
+    }
+    if (!this.currentMission.members) {
+      this.currentMission.members = [];
+    }
+
+    while (!this.canCurrentMissionVote) {
+      const selectedMembers =
+        this.currentMission.members?.map((m) => m.player.id) || [];
+      const players = this.state.players.filter(
+        (p) => !selectedMembers.includes(p.id)
+      );
+      const random = new Random(Date.now());
+      const player = players[random.nextInt(players.length)];
+      this.addMissionMember(this.currentMission, player);
+    }
+  }
+
   vote(mission: Mission | undefined, player: Player, isApprove: boolean) {
     if (!mission || this.isMissionVoteComplete(mission)) {
       return;
@@ -398,6 +424,15 @@ export class GameState {
       mission.votes.find((v) => v.player.id === playerID)?.isApprove !==
       undefined
     );
+  }
+
+  autoVote() {
+    const votes = this.currentMission?.votes || [];
+    for (const player of this.state.players || []) {
+      if (!votes.find((v) => v.player.id === player.id)) {
+        this.currentMissionVote(player.id, false);
+      }
+    }
   }
 
   isPlayerApproved(mission: Mission | undefined, playerID: string) {
@@ -437,6 +472,15 @@ export class GameState {
   isPlayerExecuted(mission: Mission | undefined, playerID: string) {
     const member = mission?.members?.find((v) => v.player.id === playerID);
     return member?.isSuccess !== undefined && member.isSuccess !== null;
+  }
+
+  autoExecute() {
+    const members = this.currentMission?.members || [];
+    for (const member of members) {
+      if (member.isSuccess === null || member.isSuccess === undefined) {
+        this.currentMissionExecute(member.player.id, true);
+      }
+    }
   }
 
   isPlayerSuccess(mission: Mission | undefined, playerID: string) {

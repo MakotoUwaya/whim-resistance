@@ -39,7 +39,7 @@ export class Rule {
           case 5:
             return 3;
           default:
-            return 0;
+            return this.minimumPlayersCount;
         }
       case 6:
         switch (phases.length) {
@@ -54,7 +54,7 @@ export class Rule {
           case 5:
             return 4;
           default:
-            return 0;
+            return this.minimumPlayersCount;
         }
       case 7:
         switch (phases.length) {
@@ -69,7 +69,7 @@ export class Rule {
           case 5:
             return 4;
           default:
-            return 0;
+            return this.minimumPlayersCount;
         }
       case 8:
       case 9:
@@ -86,10 +86,10 @@ export class Rule {
           case 5:
             return 5;
           default:
-            return 0;
+            return this.minimumPlayersCount;
         }
       default:
-        return 2;
+        return this.minimumPlayersCount;
     }
   }
 
