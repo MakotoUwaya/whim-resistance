@@ -27,13 +27,16 @@ export default class Random {
     return min + (r % (max - min));
   }
 
+  //** 配列をシャッフルする */
   suffleArray<T>(array: T[]) {
+    // FIXME: 対象数が3件程度で少ない場合、同じ結果に収束してしまうので、再度Math.random()でソートしている
+    // Fisher–Yates shuffle https://qiita.com/komaji504/items/62a0f8ea43053e90555a
     for (let i = array.length - 1; i > 0; i--) {
       const r = Math.abs(this.next()) % i;
       const tmp = array[i];
       array[i] = array[r];
       array[r] = tmp;
     }
-    return array;
+    return array.sort(() => Math.random() - 0.5);
   }
 }
