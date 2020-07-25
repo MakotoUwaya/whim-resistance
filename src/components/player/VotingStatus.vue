@@ -1,10 +1,14 @@
 <template>
-  <h2 v-if="isPlayerVoted" class="subtitle">
-    投票済み
-  </h2>
-  <h2 v-else class="subtitle">
-    投票中...
-  </h2>
+  <div class="text-center">
+    <template v-if="isPlayerVoted">
+      <span class="subtitle">投票済み</span>
+      <v-progress-linear :height="7" color="primary" rounded value="100" />
+    </template>
+    <template v-else>
+      <span class="subtitle">投票中...</span>
+      <v-progress-linear :height="7" color="accent" rounded indeterminate />
+    </template>
+  </div>
 </template>
 
 <script lang="ts">
