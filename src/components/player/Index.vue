@@ -1,14 +1,22 @@
 <template>
-  <v-container :class="{ border: isLeader }">
+  <v-container
+    :class="{
+      resistance:
+        (!isLeader || stepFinish) && !stepWaiting && isVisibleResistance,
+      spy: (!isLeader || stepFinish) && !stepWaiting && isVisibleSpy,
+      leader: !stepFinish && isLeader,
+    }"
+  >
     <!-- 役割表示 -->
-    <div v-if="isSpy && isSpyUser" class="role-mark">
-      <span v-if="isMe">あなたは </span>スパイ です
-    </div>
-    <div v-else-if="stepFinish || (!stepWaiting && isMe)" class="role-mark">
-      <span v-if="isMe">あなたは </span>レジスタンス です
-    </div>
+    <role-mark
+      v-if="!stepWaiting"
+      :is-visible-resistance="isVisibleResistance"
+      :is-visible-spy="isVisibleSpy"
+      :display-player="displayPlayer"
+    />
+
     <!-- ミッションメンバー表示 -->
-    <mission-member v-if="isMissionPlayerAdded" />
+    <mission-member v-if="!stepFinish && isMissionPlayerAdded" />
 
     <!-- ゲーム開始前 待機状態 -->
     <!-- リーダーがミッション遂行メンバーを選択 -->
@@ -19,14 +27,10 @@
       :game-state="gameState"
     />
     <!-- メンバー確定 投票 -->
-    <template v-else-if="stepVoting && isAccessUserVoted">
-      <h2 v-if="isPlayerVoted" class="subtitle">
-        投票済み
-      </h2>
-      <h2 v-else class="subtitle">
-        投票中...
-      </h2>
-    </template>
+    <voting-status
+      v-else-if="stepVoting && isAccessUserVoted"
+      :is-player-voted="isPlayerVoted"
+    />
     <!-- 投票結果確認 -->
     <approve-result
       v-else-if="stepVoted"
@@ -36,16 +40,10 @@
     />
     <!-- ミッション開始 -->
     <!-- ミッション結果確認 -->
-    <template
+    <executing-status
       v-else-if="stepExecuting && isAccessUserExecuted && isMissionMember"
-    >
-      <h2 v-if="isPlayerExecuted" class="subtitle">
-        遂行済み
-      </h2>
-      <h2 v-else class="subtitle">
-        遂行中...
-      </h2>
-    </template>
+      :is-player-executed="isPlayerExecuted"
+    />
     <!-- 最終結果確認 -->
   </v-container>
 </template>
@@ -54,15 +52,21 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { User } from "@/types/User";
 import { GameState } from "@/utils/GameState";
-import ApproveResult from "@/components/player/ApproveResult.vue";
-import SelectPlayer from "@/components/player/SelectPlayer.vue";
+import RoleMark from "@/components/player/RoleMark.vue";
 import MissionMember from "@/components/player/MissionMember.vue";
+import SelectPlayer from "@/components/player/SelectPlayer.vue";
+import VotingStatus from "@/components/player/VotingStatus.vue";
+import ApproveResult from "@/components/player/ApproveResult.vue";
+import ExecutingStatus from "@/components/player/ExecutingStatus.vue";
 
 @Component({
   components: {
-    ApproveResult,
-    SelectPlayer,
+    RoleMark,
     MissionMember,
+    SelectPlayer,
+    VotingStatus,
+    ApproveResult,
+    ExecutingStatus,
   },
 })
 export default class PlayerView extends Vue {
@@ -99,10 +103,25 @@ export default class PlayerView extends Vue {
   get isMe() {
     return this.accessUserID === this.displayUser.id;
   }
-  get isSpy() {
+  get displayPlayer() {
+    return this.gameState.getPlayer(this.displayUser.id);
+  }
+  get isVisibleResistance() {
+    return (
+      (this.stepFinish && !this.isDisplayUserSpy) ||
+      (!this.isAccessUserSpy && this.isMe)
+    );
+  }
+  get isVisibleSpy() {
+    return (
+      (this.stepFinish && this.isDisplayUserSpy) ||
+      (this.isAccessUserSpy && this.isDisplayUserSpy)
+    );
+  }
+  get isAccessUserSpy() {
     return this.gameState.isSpyPlayer(this.accessUserID);
   }
-  get isSpyUser() {
+  get isDisplayUserSpy() {
     return this.gameState.isSpyPlayer(this.displayUser.id);
   }
   get isLeader() {
@@ -146,34 +165,24 @@ export default class PlayerView extends Vue {
   text-align: center;
 }
 
-.leader-mark {
-  margin: auto;
-  position: absolute;
-  justify-content: center;
-  top: 50px;
-  text-align: center;
-}
-
-.role-mark {
-  margin: auto;
-  position: absolute;
-  justify-content: center;
-  top: 80px;
-  text-align: center;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.border {
+.leader {
   box-sizing: border-box;
   border-radius: 20px;
   border-width: 10px;
-  box-shadow: 0 0 0 10px #67c5ff inset;
+  box-shadow: 0 0 0 10px #edc32f inset;
+}
+
+.resistance {
+  box-sizing: border-box;
+  border-radius: 20px;
+  border-width: 10px;
+  box-shadow: 0 0 0 10px #1f76dd inset;
+}
+
+.spy {
+  box-sizing: border-box;
+  border-radius: 20px;
+  border-width: 10px;
+  box-shadow: 0 0 0 10px #ff5252 inset;
 }
 </style>

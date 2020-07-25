@@ -1,43 +1,39 @@
 <template>
   <v-container>
-    <span class="subtitle">準備ができたら<br />ボタンを押してください</span>
-    <v-col cols="12">
-      <v-btn
-        class="ma-4"
-        x-large
-        dark
-        rounded
-        color="primary"
-        @click="startGame"
+    <template v-if="!isPlayerReady">
+      <span class="subtitle">準備ができたら<br />ボタンを押してください</span>
+      <v-col cols="12">
+        <v-btn
+          class="ma-4"
+          x-large
+          dark
+          rounded
+          color="primary"
+          @click="startGame"
+        >
+          <span class="text-h5">ゲーム開始</span>
+        </v-btn>
+      </v-col>
+    </template>
+    <template v-else>
+      <span class="subtitle"
+        >他のプレイヤーが<br />準備ができるまで<br />お待ちください...</span
       >
-        <span class="text-h5">ゲーム開始</span>
-      </v-btn>
-    </v-col>
+    </template>
   </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { GameState } from "@/utils/GameState";
 
 @Component
 export default class PlayerRobby extends Vue {
-  @Prop({ type: Object, required: true }) gameState!: GameState;
+  @Prop({ type: Boolean, default: false }) isPlayerReady!: boolean;
 
   startGame() {
-    this.gameState.setCanStartedPlayer(this.$whim.accessUser.id);
-    this.gameState.startGame();
-    this.$whim.assignState(this.gameState.state);
+    this.$emit("start-game");
   }
 }
 </script>
 
-<style lang="scss" scoped>
-.subtitle {
-  font-weight: 300;
-  font-size: 30px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-</style>
+<style lang="scss" scoped></style>

@@ -5,4 +5,5 @@ export type Player = User & {
   role?: 'resistance' | 'spy';
   cards?: Card[];
   canStarted?: boolean;
+  image?: string;
 };

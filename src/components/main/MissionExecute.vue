@@ -8,7 +8,7 @@
         dark
         large
         color="success"
-        @click="execute('成功')"
+        @click="missionExecute('成功')"
       >
         <span class="text-h3">○</span>
       </v-btn>
@@ -19,7 +19,7 @@
         dark
         large
         color="error"
-        @click="execute('失敗')"
+        @click="missionExecute('失敗')"
       >
         <span class="text-h3">×</span>
       </v-btn>
@@ -33,28 +33,12 @@ import { GameState } from "@/utils/GameState";
 
 @Component
 export default class MissionExecute extends Vue {
-  @Prop({ type: Object, required: true }) gameState!: GameState;
+  @Prop({ type: Boolean, default: false }) isSpy!: boolean;
 
-  get isSpy() {
-    return this.gameState.isSpyPlayer(this.$whim.accessUser.id);
-  }
-
-  execute(result: "成功" | "失敗") {
-    this.gameState.currentMissionExecute(
-      this.$whim.accessUser.id,
-      result === "成功"
-    );
-    this.$whim.assignState(this.gameState.state);
+  missionExecute(result: "成功" | "失敗") {
+    this.$emit("mission-execute", result === "成功");
   }
 }
 </script>
 
-<style lang="scss" scoped>
-.subtitle {
-  font-weight: 300;
-  font-size: 30px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-</style>
+<style lang="scss" scoped></style>
