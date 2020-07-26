@@ -1,16 +1,28 @@
 <template>
-  <v-img
-    v-if="isVisibleSpy"
-    class="role-mark"
-    :src="playerImageFilePath"
-    :max-width="150"
-  />
-  <v-img
-    v-else-if="isVisibleResistance"
-    class="role-mark"
-    :src="playerImageFilePath"
-    :max-width="150"
-  />
+  <v-tooltip v-if="isVisibleSpy" top>
+    <template v-slot:activator="{ on, attrs }">
+      <v-img
+        class="role-mark"
+        :src="playerImageFilePath"
+        :max-width="150"
+        v-bind="attrs"
+        v-on="on"
+      />
+    </template>
+    <div class="text-center">スパイ</div>
+  </v-tooltip>
+  <v-tooltip v-else-if="isVisibleResistance" top>
+    <template v-slot:activator="{ on, attrs }">
+      <v-img
+        class="role-mark"
+        :src="playerImageFilePath"
+        :max-width="150"
+        v-bind="attrs"
+        v-on="on"
+      />
+    </template>
+    <div class="text-center">レジスタンス</div>
+  </v-tooltip>
 </template>
 
 <script lang="ts">
