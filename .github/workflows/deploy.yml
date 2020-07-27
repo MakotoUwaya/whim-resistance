@@ -5,6 +5,8 @@ name: Deploy
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
+  pull_request:
+    branches: [ master ]
   push:
     branches: [ master ]
 
@@ -29,11 +31,18 @@ jobs:
       run: yarn
       env:
         NODE_ENV: development
-    
+
+    - name: lint
+      run: yarn lint
+
+    - name: test
+      run: yarn test
+
     - name: build
       run: yarn build
 
     - name: Deploy Firebase Hosting
+      if: ${{ success() && github.event_name == 'push' && github.ref == 'master' }}
       uses: w9jds/firebase-action@master
       with:
         args: deploy --only hosting

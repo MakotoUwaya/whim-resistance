@@ -137,7 +137,7 @@ export default class PlayerView extends Vue {
     return this.gameState.isCurrentMissionPlayerVoted(this.displayUser.id);
   }
   get isMissionPlayerAdded() {
-    return this.gameState.isCurrentMissionPlayerAdded(this.displayUser.id);
+    return this.gameState.isCurrentMissionMember(this.displayUser.id);
   }
   get isPlayerApprove() {
     return (
