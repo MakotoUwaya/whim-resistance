@@ -6,7 +6,7 @@
       x-large
       dark
       color="primary"
-      :disabled="isUserAdded"
+      :disabled="isMissionMember"
       @click="select"
     >
       <v-icon>mdi-account-plus</v-icon>
@@ -24,8 +24,8 @@ export default class SelectPlayer extends Vue {
   @Prop({ type: Object, required: true }) gameState!: GameState;
   @Prop({ type: Object, required: true }) displayUser!: User;
 
-  get isUserAdded() {
-    return this.gameState.isCurrentMissionPlayerAdded(this.displayUser.id);
+  get isMissionMember() {
+    return this.gameState.isCurrentMissionMember(this.displayUser.id);
   }
 
   select() {

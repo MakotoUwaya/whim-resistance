@@ -270,9 +270,6 @@ export class GameState {
     if (!player) return;
     this.addMissionMember(this.currentMission, player);
   }
-  isCurrentMissionPlayerAdded(playerID: string) {
-    return this.isPlayerAdded(this.currentMission, playerID);
-  }
   isComplete(phase: Phase | undefined) {
     return this.isMissionExecuteCompleted(this.phaseLatestMission(phase));
   }
