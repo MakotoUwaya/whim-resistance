@@ -1,8 +1,7 @@
 import { Phase, Player } from '@/types';
 
 export class Rule {
-  // TODO： 5人以上に限定する
-  readonly minimumPlayersCount = 2;
+  readonly minimumPlayersCount = 5;
   readonly maxMissionCount = 5;
 
   spyCount(players: Player[]) {
