@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "eslint 'src/**/*.{ts,vue}' --config .eslintrc.js --fix"
+    "lint": "eslint 'src/**/*.{ts,vue}' --config .eslintrc.js --fix",
+    "test": "jest"
   },
   "dependencies": {
     "@chenfengyuan/vue-countdown": "^1.1.5",
@@ -19,21 +20,29 @@
     "whim-client-vue": "^1.2.10"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.7",
     "@typescript-eslint/eslint-plugin": "^3.7.0",
     "@typescript-eslint/parser": "^3.7.0",
     "@vue/cli-plugin-babel": "~4.4.6",
     "@vue/cli-plugin-eslint": "~4.4.6",
     "@vue/cli-plugin-typescript": "^4.4.6",
+    "@vue/cli-plugin-unit-jest": "^4.4.6",
     "@vue/cli-plugin-vuex": "~4.4.6",
     "@vue/cli-service": "^4.4.6",
     "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.1.0",
+    "babel-plugin-require-context-hook": "^1.0.0",
     "eslint": "^7.5.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-vue": "^6.2.2",
+    "jest": "^26.1.0",
+    "jest-canvas-mock": "^2.2.0",
+    "jest-vue-preprocessor": "^1.7.1",
     "prettier": "^2.0.5",
     "sass": "^1.26.10",
     "sass-loader": "^9.0.2",
+    "ts-jest": "^26.1.3",
     "vue-cli-plugin-vuetify": "^2.0.7",
     "vue-template-compiler": "^2.6.11",
     "vuetify-loader": "^1.6.0"

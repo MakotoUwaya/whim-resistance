@@ -1,5 +1,6 @@
 .DS_Store
 .firebase/
+coverage/
 dist/
 node_modules
 
