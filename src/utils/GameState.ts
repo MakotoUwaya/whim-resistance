@@ -170,16 +170,7 @@ export class GameState {
   }
 
   getPlayer(playerID: string) {
-    if (!this.state.players || this.state.players.length === 0) return;
-    const player = this.state.players.find((p) => p.id === playerID);
-    if (!player) {
-      console.error(
-        'プレイヤー情報が取得できません',
-        playerID,
-        this.state.players
-      );
-    }
-    return player;
+    return this.state.players?.find((p) => p.id === playerID);
   }
   addPlayer(user: User) {
     if (this.getPlayer(user.id)) {
@@ -196,17 +187,16 @@ export class GameState {
   }
   startGame() {
     if (!this.state.players || !this.rule.canStart(this.state.players)) {
-      console.warn('プレイヤー参加数が足りません', this.state.players?.length);
-      return;
+      throw Error(
+        `プレイヤー参加数が足りません: ${this.state.players?.length}/5`
+      );
     }
     if (!this.state.players.every((p) => p.canStarted)) {
-      console.info(
-        '開始状態になっていないプレイヤーがいます',
-        this.state.players.map((p) => {
-          return { name: p.name, canStarted: p.canStarted };
-        })
+      throw Error(
+        `開始状態になっていないプレイヤーがいます: ${
+          this.state.players?.filter((p) => p.canStarted).length
+        }/${this.state.players?.length}`
       );
-      return;
     }
 
     this.setRole();
@@ -214,12 +204,6 @@ export class GameState {
     this.state.isStarted = true;
   }
   next() {
-    console.log(
-      'resistance:',
-      this.successMissionCount,
-      'spy:',
-      this.failMissionCount
-    );
     this.state.currentVoteChecked = false;
     this.state.currentMissionResultChecked = false;
 
