@@ -28,12 +28,13 @@ module.exports = {
   ],
   collectCoverage: true,
   collectCoverageFrom: [
-    'src/**/*.{ts,vue}',
+    'src/**/*.ts',
     '!**/node_modules/**',
     // テストコードなのでカバレッジには含めない
     '!src/**/*.stories.ts',
     // テスト内容を検討中なので除外
-    '!src/**/App.vue',
+    '!src/plugins/vuetify.ts',
+    '!src/**/*.vue',
     '!src/**/{store,main,registerServiceWorker}.ts'
   ],
   coverageReporters: ['json', 'lcov', 'text-summary'],
