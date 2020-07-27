@@ -42,7 +42,7 @@ jobs:
       run: yarn build
 
     - name: Deploy Firebase Hosting
-      if: ${{ success() && github.event_name == 'push' && github.ref == 'master' }}
+      if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       uses: w9jds/firebase-action@master
       with:
         args: deploy --only hosting
