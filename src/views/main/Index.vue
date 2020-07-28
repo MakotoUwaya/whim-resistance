@@ -71,7 +71,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { CurrentStep, GameState } from "@/utils/GameState";
+import { Step, GameState } from "@/utils/GameState";
 import CountDownTimer, {
   oneMinute,
 } from "@/components/main/CountDownTimer.vue";
@@ -191,7 +191,7 @@ export default class MainView extends Vue {
   }
 
   @Watch("currentStep")
-  changedStep(newStep: CurrentStep, oldStep: CurrentStep) {
+  changedStep(newStep: Step, oldStep: Step) {
     if (newStep === oldStep) {
       return;
     }
