@@ -1,4 +1,4 @@
-import { Phase, Player } from '@/types';
+import { Card, Phase, Player } from '@/types';
 
 export type State = {
   phases?: Phase[];
@@ -7,4 +7,5 @@ export type State = {
   currentVoteChecked?: boolean;
   currentMissionResultChecked?: boolean;
   isTimerHidden?: boolean;
+  currentPlotCardsIndex?: number;
 };

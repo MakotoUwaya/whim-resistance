@@ -1,6 +1,7 @@
-import { Mission, Phase, Player, Rule, State } from '@/types';
+import { Card, Mission, Phase, Player, Rule, State, Timing } from '@/types';
 import { User } from '@/types/User';
 import Random from '@/types/Random';
+import { InitializePlotCards } from '@/types/PlotCard';
 
 export type Step =
   | '待機' // waiting
@@ -13,6 +14,7 @@ export type Step =
 
 export class GameState {
   private readonly rule = new Rule();
+  private readonly plotCards!: Card[];
   state!: State;
 
   constructor(state: State) {
@@ -26,6 +28,10 @@ export class GameState {
     if (state.isStarted === undefined) {
       state.isStarted = false;
     }
+    const random = new Random(Date.now());
+    this.plotCards = random.suffleArray(
+      InitializePlotCards(this.state.players)
+    );
   }
 
   /* GameState computed */
@@ -47,6 +53,24 @@ export class GameState {
       }
     } else {
       return '待機';
+    }
+  }
+  get currentTiming(): Timing {
+    const step = this.currentStep;
+    if (['終了', '待機'].includes(step)) {
+      return '利用不可';
+    } else if (step === '遂行確認') {
+      return '遂行後';
+    } else if (step === '遂行') {
+      return '遂行前';
+    } else if (step === '投票確認') {
+      return '投票後';
+    } else if (step === '投票') {
+      return '投票前'; // '選択後' と同義
+    } else if (this.isDistributedPlotCards) {
+      return '選択前';
+    } else {
+      return '配布前';
     }
   }
   get currentPhase() {
@@ -94,6 +118,20 @@ export class GameState {
   }
   get currentLeader() {
     return this.currentMission?.leader;
+  }
+  private get takePlotCard() {
+    return this.plotCards.pop();
+  }
+  get currentPhasePlotCard() {
+    if (this.state.currentPlotCardsIndex === undefined) return;
+    return this.currentPhase?.plotCards[this.state.currentPlotCardsIndex];
+  }
+  get isDistributedPlotCards() {
+    return (
+      this.state.currentPlotCardsIndex !== undefined &&
+      this.state.currentPlotCardsIndex >=
+        (this.currentPhase?.plotCards.length || 0)
+    );
   }
   get canCurrentMissionVote() {
     return this.canMissionVote(this.currentMission);
@@ -164,7 +202,12 @@ export class GameState {
       console.error('次のリーダーを取得できません');
       return;
     }
-    const phase = { missions: [], missionCountExceeded: false } as Phase;
+    const phase = {
+      missions: [],
+      missionCountExceeded: false,
+      plotCards: this.drowPlotCards(),
+    } as Phase;
+    this.state.currentPlotCardsIndex = 0;
     this.state.phases?.push(phase);
     this.nextMission(phase, nextMissionLeader);
   }
@@ -188,7 +231,7 @@ export class GameState {
   startGame() {
     if (!this.state.players || !this.rule.canStart(this.state.players)) {
       throw Error(
-        `プレイヤー参加数が足りません: ${this.state.players?.length}/5`
+        `プレイヤー参加数が足りません: ${this.state.players?.length}`
       );
     }
     if (!this.state.players.every((p) => p.canStarted)) {
@@ -206,7 +249,6 @@ export class GameState {
   next() {
     this.state.currentVoteChecked = false;
     this.state.currentMissionResultChecked = false;
-
     if (
       !this.currentPhase ||
       this.isSuccess(this.currentPhase) ||
@@ -227,6 +269,21 @@ export class GameState {
     const player = this.getPlayer(playerID);
     return player?.role === 'spy';
   }
+  ownedCard(playerID: string, card: Card) {
+    const player = this.getPlayer(playerID);
+    if (!player || !card || this.state.currentPlotCardsIndex === undefined) {
+      return;
+    }
+    if (!player.cards) {
+      player.cards = [];
+    }
+    player.cards.push(card);
+    this.state.currentPlotCardsIndex++;
+  }
+  getOwnedCards(playerID: string) {
+    const player = this.getPlayer(playerID);
+    return player ? player.cards || [] : [];
+  }
 
   /* Phase method */
 
@@ -241,6 +298,16 @@ export class GameState {
       phase.missions = [];
     }
     phase.missions.push(mission);
+  }
+  private drowPlotCards(): Card[] {
+    if (!this.state.players) return [];
+    const cards: Card[] = [];
+    for (let i = 0; i < this.rule.drowCardCount(this.state.players); i++) {
+      const card = this.takePlotCard;
+      if (!card) break;
+      cards.push(card);
+    }
+    return cards;
   }
   phaseLatestMission(phase: Phase | undefined) {
     if (!phase?.missions) return;
@@ -305,6 +372,7 @@ export class GameState {
   }
 
   /* Mission method */
+
   private canMissionVote(mission: Mission | undefined) {
     return this.rule.canMissionVote(
       this.state.players,
