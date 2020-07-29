@@ -2,7 +2,7 @@ import { Mission, Phase, Player, Rule, State } from '@/types';
 import { User } from '@/types/User';
 import Random from '@/types/Random';
 
-export type CurrentStep =
+export type Step =
   | '待機' // waiting
   | '選択' // selecting
   | '投票' // voting
@@ -30,7 +30,7 @@ export class GameState {
 
   /* GameState computed */
 
-  get currentStep() {
+  get currentStep(): Step {
     if (this.isGameover) {
       return '終了';
     } else if (this.state.isStarted) {

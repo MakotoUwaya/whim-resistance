@@ -71,7 +71,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { CurrentStep, GameState } from "@/utils/GameState";
+import { Step, GameState } from "@/utils/GameState";
 import CountDownTimer, {
   oneMinute,
 } from "@/components/main/CountDownTimer.vue";
@@ -191,7 +191,7 @@ export default class MainView extends Vue {
   }
 
   @Watch("currentStep")
-  changedStep(newStep: CurrentStep, oldStep: CurrentStep) {
+  changedStep(newStep: Step, oldStep: Step) {
     if (newStep === oldStep) {
       return;
     }
@@ -212,6 +212,7 @@ export default class MainView extends Vue {
         this.remainTime = 3;
         break;
       default:
+        if (!this.isAccessUserLeader) return;
         this.$whim.assignState({ isTimerHidden: true });
         return;
     }
@@ -276,9 +277,14 @@ export default class MainView extends Vue {
     this.next();
   }
   startGame() {
-    this.gameState.setCanStartedPlayer(this.accessUserID);
-    this.gameState.startGame();
-    this.$whim.assignState(this.gameState.state);
+    try {
+      this.gameState.setCanStartedPlayer(this.accessUserID);
+      this.gameState.startGame();
+    } catch (error) {
+      console.warn(error);
+    } finally {
+      this.$whim.assignState(this.gameState.state);
+    }
   }
   restartGame() {
     this.$emit("restart-game");

@@ -15,8 +15,8 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { User } from "@/types/User";
 import { GameState } from "@/utils/GameState";
-import MainView from "@/components/main/Index.vue";
-import PlayerView from "@/components/player/Index.vue";
+import MainView from "@/views/main/Index.vue";
+import PlayerView from "@/views/player/Index.vue";
 
 @Component({
   components: {

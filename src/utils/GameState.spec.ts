@@ -70,7 +70,7 @@ describe('Stepのテスト', () => {
       }
       state.startGame();
       for (let k = 1; k <= i; k++) {
-        state.currentMissionVote(`hoge_id${k}`, false)
+        state.currentMissionVote(`hoge_id${k}`, false);
       }
       expect(state.currentStep).toBe('投票確認');
     }
@@ -85,7 +85,7 @@ describe('Stepのテスト', () => {
       }
       state.startGame();
       for (let k = 1; k <= i; k++) {
-        state.currentMissionVote(`hoge_id${k}`, true)
+        state.currentMissionVote(`hoge_id${k}`, true);
       }
       state.state.currentVoteChecked = true;
       expect(state.currentStep).toBe('遂行');
@@ -129,7 +129,7 @@ describe('Stepのテスト', () => {
       }
       state.next();
       // フェーズ3
-      for (let k = 1; k <= ([8, 6].includes(i) ? 4 : (i === 7 ? 3 : 2)); k++) {
+      for (let k = 1; k <= ([8, 6].includes(i) ? 4 : i === 7 ? 3 : 2); k++) {
         state.addCurrentMissionMember(`hoge_id${k}`);
         state.currentMissionExecute(`hoge_id${k}`, false);
       }
@@ -143,9 +143,7 @@ describe('startGameのテスト', () => {
     const state = new GameState({
       players: createState(4),
     });
-    expect(() => state.startGame()).toThrow(
-      'プレイヤー参加数が足りません: 4/5'
-    );
+    expect(() => state.startGame()).toThrow('プレイヤー参加数が足りません: 4');
   });
   test('開始状態になっていないプレイヤーがいたとき、例外が発生すること', () => {
     const state = new GameState({
@@ -203,7 +201,7 @@ describe('addPlayer/getPlayerのテスト', () => {
       timestamp: new Date('2020-01-01 09:00:00'),
       positionNumber: 8,
       entry: false,
-      left: false
+      left: false,
     });
     for (let i = 1; i <= 8; i++) {
       expect(state.getPlayer(`hoge_id${i}`)?.name).toBe(`fuga_name${i}`);
@@ -213,19 +211,23 @@ describe('addPlayer/getPlayerのテスト', () => {
 describe('isSpyPlayerのテスト', () => {
   test('スパイプレイヤーを指定してtrueが返ること', () => {
     const state = new GameState({
-      players: [{
-        id: 'spy_player',
-        role: 'spy'
-      }]
+      players: [
+        {
+          id: 'spy_player',
+          role: 'spy',
+        },
+      ],
     });
     expect(state.isSpyPlayer('spy_player')).toBeTruthy();
   });
   test('レジスタンスプレイヤーを指定してfalseが返ること', () => {
     const state = new GameState({
-      players: [{
-        id: 'resistance_player',
-        role: 'resistance'
-      }]
+      players: [
+        {
+          id: 'resistance_player',
+          role: 'resistance',
+        },
+      ],
     });
     expect(state.isSpyPlayer('resistance_player')).toBe(false);
   });
@@ -351,7 +353,9 @@ describe('Phase/Missionのテスト', () => {
       for (let k = 1; k <= i; k++) {
         state.addCurrentMissionMember(`hoge_id${k}`);
         state.currentMissionExecute(`hoge_id${k}`, false);
-        expect(state.isCurrentMissionPlayerExecuted(`hoge_id${k}`)).toBeTruthy();
+        expect(
+          state.isCurrentMissionPlayerExecuted(`hoge_id${k}`)
+        ).toBeTruthy();
       }
     }
   });
