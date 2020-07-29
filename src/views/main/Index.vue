@@ -212,6 +212,7 @@ export default class MainView extends Vue {
         this.remainTime = 3;
         break;
       default:
+        if (!this.isAccessUserLeader) return;
         this.$whim.assignState({ isTimerHidden: true });
         return;
     }
@@ -276,9 +277,14 @@ export default class MainView extends Vue {
     this.next();
   }
   startGame() {
-    this.gameState.setCanStartedPlayer(this.accessUserID);
-    this.gameState.startGame();
-    this.$whim.assignState(this.gameState.state);
+    try {
+      this.gameState.setCanStartedPlayer(this.accessUserID);
+      this.gameState.startGame();
+    } catch (error) {
+      console.warn(error);
+    } finally {
+      this.$whim.assignState(this.gameState.state);
+    }
   }
   restartGame() {
     this.$emit("restart-game");
