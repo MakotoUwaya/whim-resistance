@@ -16,6 +16,12 @@
       :is-player-ready="isPlayerReady"
       @start-game="startGame"
     />
+    <!-- リーダーが陰謀カードを渡す -->
+    <plot-card
+      v-else-if="timingBeforeDistribute"
+      class="me"
+      :plot-card="currentPlotCard"
+    />
     <!-- リーダーがミッション遂行メンバーを選択 -->
     <select-player
       v-else-if="stepSelecting"
@@ -71,11 +77,13 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Card } from "@/types";
 import { Step, GameState } from "@/utils/GameState";
 import CountDownTimer, {
   oneMinute,
 } from "@/components/main/CountDownTimer.vue";
 import PlayerRobby from "@/components/main/PlayerRobby.vue";
+import PlotCard from "@/components/main/PlotCard.vue";
 import SelectPlayer from "@/components/main/SelectPlayer.vue";
 import PlayerVote from "@/components/main/PlayerVote.vue";
 import VoteResult from "@/components/main/VoteResult.vue";
@@ -87,6 +95,7 @@ import GameResult from "@/components/main/GameResult.vue";
   components: {
     CountDownTimer,
     PlayerRobby,
+    PlotCard,
     SelectPlayer,
     PlayerVote,
     VoteResult,
@@ -125,6 +134,31 @@ export default class MainView extends Vue {
     return this.currentStep === "終了";
   }
 
+  get currentTiming() {
+    return this.gameState.currentTiming;
+  }
+  get timingBeforeDistribute() {
+    return this.currentTiming === "配布前";
+  }
+  get timingBeforeSelect() {
+    return this.currentTiming === "選択前";
+  }
+  get timingBeforeVote() {
+    return this.currentTiming === "投票前";
+  }
+  get timingAfterVote() {
+    return this.currentTiming === "投票後";
+  }
+  get timingBeforeExcecute() {
+    return this.currentTiming === "遂行前";
+  }
+  get timingAfterExcecute() {
+    return this.currentTiming === "遂行後";
+  }
+
+  get currentPlotCard() {
+    return this.gameState.currentPhasePlotCard;
+  }
   get accessUserID() {
     return this.$whim.accessUser.id;
   }

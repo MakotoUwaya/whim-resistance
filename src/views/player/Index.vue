@@ -15,13 +15,29 @@
       :display-player="displayPlayer"
     />
 
+    <!-- 所有カード表示 -->
+    <owned-cards
+      v-if="isDisplayUserCards.length > 0"
+      :plot-cards="isDisplayUserCards"
+      :display-player="displayPlayer"
+      :is-me="isMe"
+      :game-state="gameState"
+    />
+
     <!-- ミッションメンバー表示 -->
     <mission-member v-if="!stepFinish && isMissionPlayerAdded" />
 
     <!-- ゲーム開始前 待機状態 -->
+    <!-- リーダーが陰謀カードを渡す -->
+    <select-plot-card-owner
+      v-if="timingBeforeDistribute && isAccessUserLeader && !isLeader"
+      class="container"
+      :display-user="displayUser"
+      :game-state="gameState"
+    />
     <!-- リーダーがミッション遂行メンバーを選択 -->
     <select-player
-      v-if="stepSelecting && isAccessUserLeader"
+      v-else-if="!timingBeforeDistribute && stepSelecting && isAccessUserLeader"
       class="container"
       :display-user="displayUser"
       :game-state="gameState"
@@ -53,7 +69,9 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { User } from "@/types/User";
 import { GameState } from "@/utils/GameState";
 import RoleMark from "@/components/player/RoleMark.vue";
+import OwnedCards from "@/components/player/OwnedCards.vue";
 import MissionMember from "@/components/player/MissionMember.vue";
+import SelectPlotCardOwner from "@/components/player/SelectPlotCardOwner.vue";
 import SelectPlayer from "@/components/player/SelectPlayer.vue";
 import VotingStatus from "@/components/player/VotingStatus.vue";
 import ApproveResult from "@/components/player/ApproveResult.vue";
@@ -62,7 +80,9 @@ import ExecutingStatus from "@/components/player/ExecutingStatus.vue";
 @Component({
   components: {
     RoleMark,
+    OwnedCards,
     MissionMember,
+    SelectPlotCardOwner,
     SelectPlayer,
     VotingStatus,
     ApproveResult,
@@ -100,6 +120,27 @@ export default class PlayerView extends Vue {
   get stepFinish() {
     return this.currentStep === "終了";
   }
+  get currentTiming() {
+    return this.gameState.currentTiming;
+  }
+  get timingBeforeDistribute() {
+    return this.currentTiming === "配布前";
+  }
+  get timingBeforeSelect() {
+    return this.currentTiming === "選択前";
+  }
+  get timingBeforeVote() {
+    return this.currentTiming === "投票前";
+  }
+  get timingAfterVote() {
+    return this.currentTiming === "投票後";
+  }
+  get timingBeforeExcecute() {
+    return this.currentTiming === "遂行前";
+  }
+  get timingAfterExcecute() {
+    return this.currentTiming === "遂行後";
+  }
   get isMe() {
     return this.accessUserID === this.displayUser.id;
   }
@@ -129,6 +170,9 @@ export default class PlayerView extends Vue {
   }
   get isAccessUserLeader() {
     return this.gameState.currentLeader?.id === this.accessUserID;
+  }
+  get isDisplayUserCards() {
+    return this.gameState.getOwnedCards(this.displayUser.id);
   }
   get isAccessUserVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.accessUserID);

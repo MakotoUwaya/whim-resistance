@@ -18,7 +18,7 @@ export default class MissionMember extends Vue {}
   margin: auto;
   position: absolute;
   justify-content: center;
-  bottom: 50px;
+  top: 200px;
   text-align: center;
 }
 </style>
