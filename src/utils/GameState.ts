@@ -6,6 +6,8 @@ import { InitializePlotCards } from '@/types/PlotCard';
 export type Step =
   | '待機' // waiting
   | '選択' // selecting
+  | 'カード選択' // choiceCard
+  | '早期投票' // earlyVoting
   | '投票' // voting
   | '投票確認' // voted
   | '遂行' // executing
@@ -14,7 +16,6 @@ export type Step =
 
 export class GameState {
   private readonly rule = new Rule();
-  private readonly plotCards!: Card[];
   state!: State;
 
   constructor(state: State) {
@@ -28,10 +29,12 @@ export class GameState {
     if (state.isStarted === undefined) {
       state.isStarted = false;
     }
-    const random = new Random(Date.now());
-    this.plotCards = random.suffleArray(
-      InitializePlotCards(this.state.players)
-    );
+    if (this.state.plotCards === undefined) {
+      const random = new Random(Date.now());
+      this.state.plotCards = random.suffleArray(
+        InitializePlotCards(this.state.players)
+      );
+    }
   }
 
   /* GameState computed */
@@ -46,8 +49,12 @@ export class GameState {
         return '遂行';
       } else if (this.isCurrentMissionVoteComplete) {
         return '投票確認';
+      } else if (this.canCurrentMissionVote && this.isExistEarlyVotePlayers) {
+        return '早期投票';
       } else if (this.canCurrentMissionVote) {
         return '投票';
+      } else if (this.isExistAllPlayerTakenPlotCards) {
+        return 'カード選択';
       } else {
         return '選択';
       }
@@ -82,12 +89,7 @@ export class GameState {
     return this.phaseMissionCountExceeded(this.currentPhase);
   }
   get nextMissionLeader() {
-    const currentPosition = this.currentLeader?.positionNumber || 0;
-    const nextPosition =
-      currentPosition >= (this.state.players?.length || 0)
-        ? 1
-        : currentPosition + 1;
-    return this.state.players?.find((p) => p.positionNumber === nextPosition);
+    return this.nextPositionPlayer(this.currentLeader);
   }
   get isTimerHidden() {
     return this.state.isTimerHidden;
@@ -120,7 +122,7 @@ export class GameState {
     return this.currentMission?.leader;
   }
   private get takePlotCard() {
-    return this.plotCards.pop();
+    return this.state.plotCards?.pop();
   }
   get currentPhasePlotCard() {
     if (this.state.currentPlotCardsIndex === undefined) return;
@@ -131,6 +133,19 @@ export class GameState {
       this.state.currentPlotCardsIndex !== undefined &&
       this.state.currentPlotCardsIndex >=
         (this.currentPhase?.plotCards.length || 0)
+    );
+  }
+  get isExistAllPlayerTakenPlotCards() {
+    return !!this.state.allPlayerTakenPlotCards;
+  }
+  get isExistEarlyVotePlayers() {
+    const earlyVotePlayers =
+      this.state.players?.filter((p) => this.hasOpinionMakerCard(p.id)) || [];
+    return (
+      earlyVotePlayers.length > 0 &&
+      !earlyVotePlayers.every((p) =>
+        this.currentMission?.votes?.find((mp) => mp.player.id === p.id)
+      )
     );
   }
   get canCurrentMissionVote() {
@@ -249,6 +264,8 @@ export class GameState {
   next() {
     this.state.currentVoteChecked = false;
     this.state.currentMissionResultChecked = false;
+    this.state.currentCard = null;
+    this.state.currentCardUser = null;
     if (
       !this.currentPhase ||
       this.isSuccess(this.currentPhase) ||
@@ -269,6 +286,9 @@ export class GameState {
     const player = this.getPlayer(playerID);
     return player?.role === 'spy';
   }
+  isEarlyLeader(playerID: string) {
+    return this.hasOpinionMakerCard(playerID);
+  }
   ownedCard(playerID: string, card: Card) {
     const player = this.getPlayer(playerID);
     if (!player || !card || this.state.currentPlotCardsIndex === undefined) {
@@ -283,6 +303,29 @@ export class GameState {
   getOwnedCards(playerID: string) {
     const player = this.getPlayer(playerID);
     return player ? player.cards || [] : [];
+  }
+  nextPositionPlayer(targetPlayer: Player | undefined) {
+    const currentPosition = targetPlayer?.positionNumber || 0;
+    const nextPosition =
+      currentPosition >= (this.state.players?.length || 0)
+        ? 1
+        : currentPosition + 1;
+    return this.state.players?.find((p) => p.positionNumber === nextPosition);
+  }
+  private hasCard(playerID: string, cardName: string, unused = false) {
+    const player = this.getPlayer(playerID);
+    return !!player?.cards?.find(
+      (c) => c.name === cardName && (unused || !c.used)
+    );
+  }
+  hasOpinionMakerCard(playerID: string) {
+    return this.hasCard(playerID, '総意の形成者', true);
+  }
+  hasResponsibilityCard(playerID: string) {
+    return this.hasCard(playerID, '責任者');
+  }
+  hasKeepingCloseEyeOnYouCard(playerID: string) {
+    return this.hasCard(playerID, '監視者');
   }
 
   /* Phase method */
@@ -316,6 +359,10 @@ export class GameState {
   phaseMissionCountExceeded(phase: Phase | undefined) {
     return phase?.missionCountExceeded || false;
   }
+  isPublicCurrentMissionMember(playerID: string) {
+    const player = this.getPlayer(playerID);
+    return !!player && this.isPublicMissionMember(this.currentMission, player);
+  }
   addCurrentMissionMember(playerID: string) {
     const player = this.getPlayer(playerID);
     if (!player) return;
@@ -345,7 +392,8 @@ export class GameState {
       this.isCurrentMissionVoteComplete &&
       this.currentPhase &&
       this.currentPhase.missions &&
-      this.currentPhase.missions.length >= this.rule.maxMissionCount
+      this.currentPhase.missions.filter((m) => this.isMissionVoteComplete(m))
+        .length >= this.rule.maxMissionCount
     ) {
       this.currentPhase.missionCountExceeded = true;
     }
@@ -370,9 +418,100 @@ export class GameState {
   isCurrentMissionPlayerSuccess(playerID: string) {
     return this.isPlayerSuccess(this.currentMission, playerID);
   }
+  moveCard(card: Card, playerID: string) {
+    const player = this.getPlayer(playerID);
+    if (!player) return;
+    for (const targetPlayer of this.state.players?.filter(
+      (p) => p.id !== player.id
+    ) || []) {
+      const targetCard = targetPlayer.cards?.find((c) => c.id === card.id);
+      if (targetCard) {
+        if (!player.cards) {
+          player.cards = [];
+        }
+        player.cards.push(card);
+        targetPlayer.cards = targetPlayer.cards?.filter(
+          (c) => c.id !== card.id
+        );
+        this.state.allPlayerTakenPlotCards = null;
+        break;
+      }
+    }
+  }
+  usingCard(
+    card: Card | undefined,
+    player: Player | undefined,
+    targetPlayer: Player | undefined = undefined
+  ) {
+    if (!player || !card) {
+      throw new Error('カードは利用できません');
+    }
+    this.state.currentCard = card;
+    this.state.currentCardUser = player;
+
+    if (card.name === '強力なリーダー') {
+      this.setCurrentMissionLeader(player);
+    } else if (card.name === '責任者') {
+      if (!this.state.players) return;
+      const allCards: Card[] = this.state.players.flatMap((p) =>
+        p.id !== player.id && p.cards !== undefined && p.cards.every((c) => !!c)
+          ? p.cards
+          : []
+      );
+      this.state.allPlayerTakenPlotCards = allCards.filter(
+        (c) => !!c && !c.used
+      );
+    } else if (card.name === '不信') {
+      this.next();
+    } else if (card.name === '総意の形成者') {
+      return;
+    } else if (card.name === '監視者') {
+      if (!targetPlayer) return;
+      const member = this.currentMission?.members?.find(
+        (m) => m.player.id === targetPlayer.id
+      );
+      if (!member) return;
+      member.isPublic = true;
+      console.log(member.isPublic);
+    } else if (card.name === '立ち聞きされた会話') {
+      // NOTE: 次の順番の人を自動的に設定している
+      // TODO: 前後どちらかユーザーが選べるようにする
+      const nextPositionPlayer = this.nextPositionPlayer(player);
+      if (nextPositionPlayer) {
+        // TODO: カードを使用したプレイヤーだけに役割が一瞬見えるようにする
+        console.log(nextPositionPlayer.role);
+      }
+    } else if (card.name === '情報開示') {
+      // TODO: 選択したプレイヤーだけに役割が一瞬見えるようにする
+      console.log(player.role);
+    } else if (card.name === '注目の的') {
+      // NOTE: ミッションメンバーの先頭の人を自動的に公開している
+      // TODO: ユーザーが自由に選べるようにする
+      const members = this.currentMission?.members;
+      if (!members) return;
+      for (const member of members) {
+        member.isPublic = true;
+        break;
+      }
+    } else if (card.name === '信用の確立') {
+      // TODO: 選択したプレイヤーだけに役割が一瞬見えるようにする
+      console.log(
+        player.name,
+        'リーダー:',
+        this.currentLeader?.name,
+        this.currentLeader?.role
+      );
+    }
+    card.used = true;
+  }
 
   /* Mission method */
 
+  private setCurrentMissionLeader(player: Player) {
+    if (!this.currentPhase || !this.currentMission) return;
+    this.currentMission.leader = player;
+    this.nextMission(this.currentPhase, player);
+  }
   private canMissionVote(mission: Mission | undefined) {
     return this.rule.canMissionVote(
       this.state.players,
@@ -419,6 +558,12 @@ export class GameState {
     );
   }
 
+  isPublicMissionMember(mission: Mission | undefined, player: Player) {
+    if (!mission || !player) return false;
+    const member = mission.members?.find((m) => m.player.id === player.id);
+    return !!member && member.isPublic;
+  }
+
   addMissionMember(mission: Mission | undefined, player: Player) {
     if (!mission) return;
     if (!mission.members) {
@@ -426,7 +571,7 @@ export class GameState {
     }
     const member = mission.members.find((d) => d.player.id === player.id);
     if (member) return;
-    mission.members.push({ player, isSuccess: null });
+    mission.members.push({ player, isSuccess: null, isPublic: false });
   }
 
   removeMember(mission: Mission | undefined, player: Player) {
@@ -472,7 +617,10 @@ export class GameState {
       member.isApprove = isApprove;
       return;
     }
-    mission.votes.push({ player, isApprove });
+    mission.votes.push({
+      player,
+      isApprove,
+    });
   }
 
   isPlayerVoted(mission: Mission | undefined, playerID: string) {
@@ -483,6 +631,16 @@ export class GameState {
     );
   }
 
+  autoEarlyVote() {
+    const votes = this.currentMission?.votes || [];
+    for (const player of this.state.players?.filter((p) =>
+      this.hasOpinionMakerCard(p.id)
+    ) || []) {
+      if (!votes.find((v) => v.player.id === player.id)) {
+        this.currentMissionVote(player.id, false);
+      }
+    }
+  }
   autoVote() {
     const votes = this.currentMission?.votes || [];
     for (const player of this.state.players || []) {
@@ -493,10 +651,8 @@ export class GameState {
   }
 
   isPlayerApproved(mission: Mission | undefined, playerID: string) {
-    if (!mission?.votes) return false;
-    return (
-      mission.votes.find((v) => v.player.id === playerID)?.isApprove || false
-    );
+    if (!mission?.votes) return undefined;
+    return mission.votes.find((v) => v.player.id === playerID)?.isApprove;
   }
 
   approvedCount(mission: Mission | undefined) {
