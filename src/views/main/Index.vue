@@ -212,7 +212,6 @@ export default class MainView extends Vue {
         this.remainTime = 3;
         break;
       default:
-        if (!this.isAccessUserLeader) return;
         this.$whim.assignState({ isTimerHidden: true });
         return;
     }
