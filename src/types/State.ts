@@ -7,9 +7,13 @@ export type State = {
   currentVoteChecked?: boolean;
   currentMissionResultChecked?: boolean;
   isTimerHidden?: boolean;
+  // PlotCards
   plotCards?: Card[];
-  allPlayerTakenPlotCards?: Card[] | null;
   currentPlotCardsIndex?: number;
   currentCardUser?: Player | null;
   currentCard?: Card | null;
+  // Plot_TakeResponsibility
+  allPlayerTakenPlotCards?: Card[] | null;
+  // Plot_OverheardConversation
+  canOverheardConversation?: { player: Player; isPublic: boolean }[] | null;
 };

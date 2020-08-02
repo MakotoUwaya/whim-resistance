@@ -6,6 +6,7 @@ import { InitializePlotCards } from '@/types/PlotCard';
 export type Step =
   | '待機' // waiting
   | '選択' // selecting
+  | '立ち聞き' // observe
   | 'カード選択' // choiceCard
   | '早期投票' // earlyVoting
   | '投票' // voting
@@ -55,6 +56,8 @@ export class GameState {
         return '投票';
       } else if (this.isExistAllPlayerTakenPlotCards) {
         return 'カード選択';
+      } else if (this.isExistOverheardConversationPlayers) {
+        return '立ち聞き';
       } else {
         return '選択';
       }
@@ -147,6 +150,9 @@ export class GameState {
         this.currentMission?.votes?.find((mp) => mp.player.id === p.id)
       )
     );
+  }
+  get isExistOverheardConversationPlayers() {
+    return this.state.canOverheardConversation?.length || 0 > 0;
   }
   get canCurrentMissionVote() {
     return this.canMissionVote(this.currentMission);
@@ -266,6 +272,7 @@ export class GameState {
     this.state.currentMissionResultChecked = false;
     this.state.currentCard = null;
     this.state.currentCardUser = null;
+    this.state.canOverheardConversation = null;
     if (
       !this.currentPhase ||
       this.isSuccess(this.currentPhase) ||
@@ -289,6 +296,13 @@ export class GameState {
   isEarlyLeader(playerID: string) {
     return this.hasOpinionMakerCard(playerID);
   }
+  canOverheardConversation(playerID: string) {
+    return (
+      this.state.canOverheardConversation?.find(
+        (p) => p.player.id === playerID
+      ) || false
+    );
+  }
   ownedCard(playerID: string, card: Card) {
     const player = this.getPlayer(playerID);
     if (!player || !card || this.state.currentPlotCardsIndex === undefined) {
@@ -303,6 +317,14 @@ export class GameState {
   getOwnedCards(playerID: string) {
     const player = this.getPlayer(playerID);
     return player ? player.cards || [] : [];
+  }
+  prevPositionPlayer(targetPlayer: Player | undefined) {
+    const currentPosition = targetPlayer?.positionNumber || 1;
+    const prevPosition =
+      currentPosition <= 1
+        ? this.state.players?.length || 1
+        : currentPosition - 1;
+    return this.state.players?.find((p) => p.positionNumber === prevPosition);
   }
   nextPositionPlayer(targetPlayer: Player | undefined) {
     const currentPosition = targetPlayer?.positionNumber || 1;
@@ -474,13 +496,13 @@ export class GameState {
       member.isPublic = true;
       console.log(member.isPublic);
     } else if (card.name === '立ち聞きされた会話') {
-      // NOTE: 次の順番の人を自動的に設定している
-      // TODO: 前後どちらかユーザーが選べるようにする
+      const prevPositionPlayer = this.prevPositionPlayer(player);
       const nextPositionPlayer = this.nextPositionPlayer(player);
-      if (nextPositionPlayer) {
-        // TODO: カードを使用したプレイヤーだけに役割が一瞬見えるようにする
-        console.log(nextPositionPlayer.role);
-      }
+      if (!prevPositionPlayer || !nextPositionPlayer) return;
+      this.state.canOverheardConversation = [
+        { player: prevPositionPlayer, isPublic: false },
+        { player: nextPositionPlayer, isPublic: false },
+      ];
     } else if (card.name === '情報開示') {
       // TODO: 選択したプレイヤーだけに役割が一瞬見えるようにする
       console.log(player.role);

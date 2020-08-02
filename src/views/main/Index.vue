@@ -133,6 +133,9 @@ export default class MainView extends Vue {
   get stepSelecting() {
     return this.currentStep === "選択";
   }
+  get stepObserve() {
+    return this.currentStep === "立ち聞き";
+  }
   get stepChoiceCard() {
     return this.currentStep === "カード選択";
   }

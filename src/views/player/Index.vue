@@ -36,6 +36,14 @@
       :display-player="displayPlayer"
       :game-state="gameState"
     />
+    <!-- カード利用者が立ち聞き対象を選ぶ -->
+    <public-player-role
+      v-else-if="stepObserve && observablePlayer"
+      :is-observer="isObserver"
+      :observable-player="observablePlayer"
+      @public-observer="publicObserver"
+      @check-role="checkRole"
+    />
     <!-- リーダーがミッション遂行メンバーを選択 -->
     <select-player
       v-else-if="!timingBeforeDistribute && stepSelecting && isAccessUserLeader"
@@ -93,6 +101,7 @@ import RoleMark from "@/components/player/RoleMark.vue";
 import OwnedCards from "@/components/player/OwnedCards.vue";
 import MissionMember from "@/components/player/MissionMember.vue";
 import SelectPlotCardOwner from "@/components/player/SelectPlotCardOwner.vue";
+import PublicPlayerRole from "@/components/player/PublicPlayerRole.vue";
 import SelectPlayer from "@/components/player/SelectPlayer.vue";
 import VotingEarlyStatus from "@/components/player/VotingEarlyStatus.vue";
 import VotingStatus from "@/components/player/VotingStatus.vue";
@@ -106,6 +115,7 @@ import PublicMissionResult from "@/components/player/PublicMissionResult.vue";
     OwnedCards,
     MissionMember,
     SelectPlotCardOwner,
+    PublicPlayerRole,
     SelectPlayer,
     VotingEarlyStatus,
     VotingStatus,
@@ -129,6 +139,9 @@ export default class PlayerView extends Vue {
   }
   get stepSelecting() {
     return this.currentStep === "選択";
+  }
+  get stepObserve() {
+    return this.currentStep === "立ち聞き";
   }
   get stepChoiceCard() {
     return this.currentStep === "カード選択";
@@ -208,6 +221,14 @@ export default class PlayerView extends Vue {
   get isDisplayUserCards() {
     return this.gameState.getOwnedCards(this.displayUser.id);
   }
+  get observablePlayer() {
+    return this.gameState.state.canOverheardConversation?.find(
+      (p) => p.player.id === this.displayUser.id
+    );
+  }
+  get isObserver() {
+    return this.gameState.state.currentCardUser?.id === this.accessUserID;
+  }
   get isAccessUserVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.accessUserID);
   }
@@ -239,14 +260,19 @@ export default class PlayerView extends Vue {
     return this.gameState.hasKeepingCloseEyeOnYouCard(this.accessUserID);
   }
   get isPublicMissionMember() {
-    console.log(
-      this.gameState.isPublicCurrentMissionMember(this.displayUser.id)
-    );
     return this.gameState.isPublicCurrentMissionMember(this.displayUser.id);
   }
 
   usingCard(card: Card) {
     this.gameState.usingCard(card, this.accessPlayer);
+    this.$whim.assignState(this.gameState.state);
+  }
+  publicObserver() {
+    this.$whim.assignState(this.gameState.state);
+  }
+  checkRole() {
+    this.gameState.state.canOverheardConversation = null;
+    this.gameState.state.currentCardUser = null;
     this.$whim.assignState(this.gameState.state);
   }
   publicResult() {
