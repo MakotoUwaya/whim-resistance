@@ -19,9 +19,10 @@
     <owned-cards
       v-if="isDisplayUserCards.length > 0"
       :plot-cards="isDisplayUserCards"
-      :display-player="displayPlayer"
+      :current-timing="currentTiming"
+      :is-game-over="stepFinish"
       :is-me="isMe"
-      :game-state="gameState"
+      @using-card="usingCard"
     />
 
     <!-- ミッションメンバー表示 -->
@@ -32,7 +33,7 @@
     <select-plot-card-owner
       v-if="timingBeforeDistribute && isAccessUserLeader && !isLeader"
       class="container"
-      :display-user="displayUser"
+      :display-player="displayPlayer"
       :game-state="gameState"
     />
     <!-- リーダーがミッション遂行メンバーを選択 -->
@@ -43,8 +44,16 @@
       :game-state="gameState"
     />
     <!-- メンバー確定 投票 -->
+    <voting-early-status
+      v-else-if="stepEarlyVoting || (stepVoting && !isAccessUserVoted)"
+      :is-early-leader="isEarlyLeader"
+      :is-approve="isPlayerApprove"
+      :is-player-voted="isPlayerVoted"
+    />
     <voting-status
       v-else-if="stepVoting && isAccessUserVoted"
+      :is-early-leader="isEarlyLeader"
+      :is-approve="isPlayerApprove"
       :is-player-voted="isPlayerVoted"
     />
     <!-- 投票結果確認 -->
@@ -55,10 +64,21 @@
       :game-state="gameState"
     />
     <!-- ミッション開始 -->
-    <!-- ミッション結果確認 -->
     <executing-status
-      v-else-if="stepExecuting && isAccessUserExecuted && isMissionMember"
+      v-else-if="
+        stepExecuting &&
+        ((!isMe && isMissionMember) || (isMe && isAccessUserExecuted))
+      "
       :is-player-executed="isPlayerExecuted"
+    />
+    <!-- ミッション結果確認 -->
+    <public-mission-result
+      v-else-if="stepExecuted && isMissionMember"
+      :can-public="hasKeepingCloseEyeOnYouCard"
+      :is-mission-player-success="isMissionPlayerSuccess"
+      :is-public-result="isPublicMissionMember"
+      :is-me="isMe"
+      @public-result="publicResult"
     />
     <!-- 最終結果確認 -->
   </v-container>
@@ -66,6 +86,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import { Card } from "@/types";
 import { User } from "@/types/User";
 import { GameState } from "@/utils/GameState";
 import RoleMark from "@/components/player/RoleMark.vue";
@@ -73,9 +94,11 @@ import OwnedCards from "@/components/player/OwnedCards.vue";
 import MissionMember from "@/components/player/MissionMember.vue";
 import SelectPlotCardOwner from "@/components/player/SelectPlotCardOwner.vue";
 import SelectPlayer from "@/components/player/SelectPlayer.vue";
+import VotingEarlyStatus from "@/components/player/VotingEarlyStatus.vue";
 import VotingStatus from "@/components/player/VotingStatus.vue";
 import ApproveResult from "@/components/player/ApproveResult.vue";
 import ExecutingStatus from "@/components/player/ExecutingStatus.vue";
+import PublicMissionResult from "@/components/player/PublicMissionResult.vue";
 
 @Component({
   components: {
@@ -84,9 +107,11 @@ import ExecutingStatus from "@/components/player/ExecutingStatus.vue";
     MissionMember,
     SelectPlotCardOwner,
     SelectPlayer,
+    VotingEarlyStatus,
     VotingStatus,
     ApproveResult,
     ExecutingStatus,
+    PublicMissionResult,
   },
 })
 export default class PlayerView extends Vue {
@@ -104,6 +129,12 @@ export default class PlayerView extends Vue {
   }
   get stepSelecting() {
     return this.currentStep === "選択";
+  }
+  get stepChoiceCard() {
+    return this.currentStep === "カード選択";
+  }
+  get stepEarlyVoting() {
+    return this.currentStep === "早期投票";
   }
   get stepVoting() {
     return this.currentStep === "投票";
@@ -147,6 +178,9 @@ export default class PlayerView extends Vue {
   get displayPlayer() {
     return this.gameState.getPlayer(this.displayUser.id);
   }
+  get accessPlayer() {
+    return this.gameState.getPlayer(this.accessUserID);
+  }
   get isVisibleResistance() {
     return (
       (this.stepFinish && !this.isDisplayUserSpy) ||
@@ -180,13 +214,14 @@ export default class PlayerView extends Vue {
   get isPlayerVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.displayUser.id);
   }
+  get isEarlyLeader() {
+    return this.gameState.isEarlyLeader(this.displayUser.id);
+  }
   get isMissionPlayerAdded() {
     return this.gameState.isCurrentMissionMember(this.displayUser.id);
   }
   get isPlayerApprove() {
-    return (
-      this.gameState.isCurrentMissionPlayerApprove(this.displayUser.id) || false
-    );
+    return this.gameState.isCurrentMissionPlayerApprove(this.displayUser.id);
   }
   get isMissionMember() {
     return this.gameState.isCurrentMissionMember(this.displayUser.id);
@@ -196,6 +231,31 @@ export default class PlayerView extends Vue {
   }
   get isPlayerExecuted() {
     return this.gameState.isCurrentMissionPlayerExecuted(this.displayUser.id);
+  }
+  get isMissionPlayerSuccess() {
+    return this.gameState.isCurrentMissionPlayerSuccess(this.displayUser.id);
+  }
+  get hasKeepingCloseEyeOnYouCard() {
+    return this.gameState.hasKeepingCloseEyeOnYouCard(this.accessUserID);
+  }
+  get isPublicMissionMember() {
+    console.log(
+      this.gameState.isPublicCurrentMissionMember(this.displayUser.id)
+    );
+    return this.gameState.isPublicCurrentMissionMember(this.displayUser.id);
+  }
+
+  usingCard(card: Card) {
+    this.gameState.usingCard(card, this.accessPlayer);
+    this.$whim.assignState(this.gameState.state);
+  }
+  publicResult() {
+    const card = this.accessPlayer?.cards?.find(
+      (c) => !c.used && c.name === "監視者"
+    );
+    if (!card) return;
+    this.gameState.usingCard(card, this.accessPlayer, this.displayPlayer);
+    this.$whim.assignState(this.gameState.state);
   }
 }
 </script>

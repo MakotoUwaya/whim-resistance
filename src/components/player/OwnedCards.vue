@@ -19,20 +19,21 @@
       </v-img>
       <div class="pager"></div>
     </v-carousel-item>
-    <v-dialog v-model="showUsingCardDialog">
+    <v-dialog v-if="selectedCard && !isGameOver" v-model="showUsingCardDialog">
       <v-card class="mx-auto" max-width="350" :elevation="10">
         <v-img :src="convertImage(selectedCard.image)" />
         <v-card-actions class="pa-1">
           <v-spacer></v-spacer>
-          <v-btn color="gray" text @click="showUsingCardDialog = false">
-            やめる
-          </v-btn>
-          <v-btn
-            v-if="isMe && !selectedCard.used"
-            color="primary"
-            @click="usingCard"
-          >
-            使用する
+          <template v-if="canUsingCard">
+            <v-btn color="gray" text @click="showUsingCardDialog = false">
+              やめる
+            </v-btn>
+            <v-btn color="primary" @click="usingCard">
+              使用する
+            </v-btn>
+          </template>
+          <v-btn v-else color="gray" text @click="showUsingCardDialog = false">
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -43,51 +44,53 @@
       rounded="pill"
       bottom
     >
-      このカードは現在利用できません。
+      このカードは利用できません。
     </v-snackbar>
   </v-carousel>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { Card, Player } from "@/types";
+import { Card } from "@/types";
 import { GameState } from "@/utils/GameState";
 
 @Component
 export default class OwnedCards extends Vue {
   showUsingCardDialog = false;
   showTimingErrorSnackbar = false;
-  currentCard?: Card;
+  selectedCard: Card = {} as Card;
 
   @Prop({ type: Array, default: [] }) plotCards!: Card[];
-  @Prop({ type: Object, required: true }) displayPlayer!: Player;
+  @Prop({ type: String, default: "" }) currentTiming!: string;
+  @Prop({ type: Boolean, required: true }) isGameOver!: boolean;
   @Prop({ type: Boolean, required: true }) isMe!: boolean;
-  @Prop({ type: Object, required: true }) gameState!: GameState;
 
   get hasMultipleCards() {
     return this.plotCards.length > 1;
   }
-
-  get selectedCard() {
-    return this.currentCard || this.plotCards[this.plotCards.length - 1];
+  get canUsingCard() {
+    return (
+      this.isMe &&
+      !this.selectedCard.used &&
+      this.selectedCard.timing === this.currentTiming &&
+      this.selectedCard.oneTime
+    );
   }
 
   convertImage(imagePath: string) {
-    return require(`../../assets/${imagePath}`);
+    return imagePath ? require(`../../assets/${imagePath}`) : "";
   }
   openCardDialog(card: Card) {
-    console.log(card);
-    this.currentCard = card;
+    this.selectedCard = card || ({} as Card);
     this.showUsingCardDialog = true;
     this.showTimingErrorSnackbar = false;
   }
   usingCard() {
     try {
-      this.gameState.usingCard(this.currentCard, this.displayPlayer);
+      this.$emit("using-card", this.selectedCard);
     } catch {
       this.showTimingErrorSnackbar = true;
     } finally {
-      this.$whim.assignState(this.gameState.state);
       this.showUsingCardDialog = false;
     }
   }

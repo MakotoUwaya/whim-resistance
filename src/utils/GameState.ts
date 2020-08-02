@@ -305,9 +305,9 @@ export class GameState {
     return player ? player.cards || [] : [];
   }
   nextPositionPlayer(targetPlayer: Player | undefined) {
-    const currentPosition = targetPlayer?.positionNumber || 0;
+    const currentPosition = targetPlayer?.positionNumber || 1;
     const nextPosition =
-      currentPosition >= (this.state.players?.length || 0)
+      currentPosition >= (this.state.players?.length || 1)
         ? 1
         : currentPosition + 1;
     return this.state.players?.find((p) => p.positionNumber === nextPosition);
@@ -322,7 +322,7 @@ export class GameState {
     return this.hasCard(playerID, '総意の形成者', true);
   }
   hasResponsibilityCard(playerID: string) {
-    return this.hasCard(playerID, '責任者');
+    return this.hasCard(playerID, '責任者', true);
   }
   hasKeepingCloseEyeOnYouCard(playerID: string) {
     return this.hasCard(playerID, '監視者');

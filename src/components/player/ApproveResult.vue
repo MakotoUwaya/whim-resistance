@@ -11,7 +11,7 @@ import { User } from "@/types/User";
 @Component
 export default class ApproveResult extends Vue {
   @Prop({ type: Object, required: true }) displayUser!: User;
-  @Prop({ type: Boolean, required: true }) isApprove!: boolean;
+  @Prop({ type: Boolean }) isApprove?: boolean;
 
   get approveResultImage() {
     return require(`../../assets/mark_${
