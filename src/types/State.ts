@@ -16,4 +16,7 @@ export type State = {
   allPlayerTakenPlotCards?: Card[] | null;
   // Plot_OverheardConversation
   canOverheardConversation?: { player: Player; isPublic: boolean }[] | null;
+  // Plot_OpenUp, Plot_EstablishConfidence
+  openUpViewer?: Player | null;
+  openUpExecuting?: boolean;
 };

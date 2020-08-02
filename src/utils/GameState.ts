@@ -7,6 +7,7 @@ export type Step =
   | '待機' // waiting
   | '選択' // selecting
   | '立ち聞き' // observe
+  | '情報開示' // openup
   | 'カード選択' // choiceCard
   | '早期投票' // earlyVoting
   | '投票' // voting
@@ -56,6 +57,8 @@ export class GameState {
         return '投票';
       } else if (this.isExistAllPlayerTakenPlotCards) {
         return 'カード選択';
+      } else if (this.isExistOpenUptargetPlayer) {
+        return '情報開示';
       } else if (this.isExistOverheardConversationPlayers) {
         return '立ち聞き';
       } else {
@@ -153,6 +156,9 @@ export class GameState {
   }
   get isExistOverheardConversationPlayers() {
     return this.state.canOverheardConversation?.length || 0 > 0;
+  }
+  get isExistOpenUptargetPlayer() {
+    return !!this.state.currentCardUser && this.state.openUpExecuting;
   }
   get canCurrentMissionVote() {
     return this.canMissionVote(this.currentMission);
@@ -504,8 +510,8 @@ export class GameState {
         { player: nextPositionPlayer, isPublic: false },
       ];
     } else if (card.name === '情報開示') {
-      // TODO: 選択したプレイヤーだけに役割が一瞬見えるようにする
-      console.log(player.role);
+      this.state.openUpViewer = null;
+      this.state.openUpExecuting = true;
     } else if (card.name === '注目の的') {
       // NOTE: ミッションメンバーの先頭の人を自動的に公開している
       // TODO: ユーザーが自由に選べるようにする
@@ -516,13 +522,9 @@ export class GameState {
         break;
       }
     } else if (card.name === '信用の確立') {
-      // TODO: 選択したプレイヤーだけに役割が一瞬見えるようにする
-      console.log(
-        player.name,
-        'リーダー:',
-        this.currentLeader?.name,
-        this.currentLeader?.role
-      );
+      this.state.currentCardUser = this.currentLeader;
+      this.state.openUpViewer = null;
+      this.state.openUpExecuting = true;
     }
     card.used = true;
   }

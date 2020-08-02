@@ -44,6 +44,17 @@
       @public-observer="publicObserver"
       @check-role="checkRole"
     />
+    <!-- 情報開示対象を選ぶ -->
+    <open-up-role
+      v-else-if="stepOpenUp && openUpTargetPlayer"
+      :is-open-up="!!openUpViewer"
+      :is-open-up-selector="isOpenUpSelector"
+      :is-open-up-target="isOpenUpTarget"
+      :is-open-up-viewer="isOpenUpViewer"
+      :open-up-target-player="openUpTargetPlayer"
+      @set-open-up="setOpenUp"
+      @check-role="checkRole"
+    />
     <!-- リーダーがミッション遂行メンバーを選択 -->
     <select-player
       v-else-if="!timingBeforeDistribute && stepSelecting && isAccessUserLeader"
@@ -102,6 +113,7 @@ import OwnedCards from "@/components/player/OwnedCards.vue";
 import MissionMember from "@/components/player/MissionMember.vue";
 import SelectPlotCardOwner from "@/components/player/SelectPlotCardOwner.vue";
 import PublicPlayerRole from "@/components/player/PublicPlayerRole.vue";
+import OpenUpRole from "@/components/player/OpenUpRole.vue";
 import SelectPlayer from "@/components/player/SelectPlayer.vue";
 import VotingEarlyStatus from "@/components/player/VotingEarlyStatus.vue";
 import VotingStatus from "@/components/player/VotingStatus.vue";
@@ -116,6 +128,7 @@ import PublicMissionResult from "@/components/player/PublicMissionResult.vue";
     MissionMember,
     SelectPlotCardOwner,
     PublicPlayerRole,
+    OpenUpRole,
     SelectPlayer,
     VotingEarlyStatus,
     VotingStatus,
@@ -142,6 +155,9 @@ export default class PlayerView extends Vue {
   }
   get stepObserve() {
     return this.currentStep === "立ち聞き";
+  }
+  get stepOpenUp() {
+    return this.currentStep === "情報開示";
   }
   get stepChoiceCard() {
     return this.currentStep === "カード選択";
@@ -229,6 +245,28 @@ export default class PlayerView extends Vue {
   get isObserver() {
     return this.gameState.state.currentCardUser?.id === this.accessUserID;
   }
+  get openUpTargetPlayer() {
+    return this.gameState.state.currentCardUser;
+  }
+  get openUpViewer() {
+    return this.gameState.state.openUpViewer;
+  }
+  get isOpenUpSelector() {
+    return (
+      this.openUpTargetPlayer &&
+      this.openUpTargetPlayer.id === this.accessUserID &&
+      !this.isMe
+    );
+  }
+  get isOpenUpTarget() {
+    return (
+      !!this.openUpTargetPlayer &&
+      this.openUpTargetPlayer.id === this.displayUser.id
+    );
+  }
+  get isOpenUpViewer() {
+    return !!this.openUpViewer && this.openUpViewer.id === this.accessUserID;
+  }
   get isAccessUserVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.accessUserID);
   }
@@ -273,6 +311,12 @@ export default class PlayerView extends Vue {
   checkRole() {
     this.gameState.state.canOverheardConversation = null;
     this.gameState.state.currentCardUser = null;
+    this.gameState.state.openUpViewer = null;
+    this.gameState.state.openUpExecuting = false;
+    this.$whim.assignState(this.gameState.state);
+  }
+  setOpenUp() {
+    this.gameState.state.openUpViewer = this.displayPlayer;
     this.$whim.assignState(this.gameState.state);
   }
   publicResult() {
