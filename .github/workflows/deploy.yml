@@ -45,7 +45,7 @@ jobs:
       if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       uses: w9jds/firebase-action@master
       with:
-        args: deploy --only hosting
+        args: deploy --only hosting:whim-resistance-plot-card
       env:
         PROJECT_ID: whim-resistance
         FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
