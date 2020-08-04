@@ -16,6 +16,20 @@
       :is-player-ready="isPlayerReady"
       @start-game="startGame"
     />
+    <!-- リーダーが陰謀カードを渡す -->
+    <plot-card
+      v-else-if="timingBeforeDistribute"
+      class="me"
+      :plot-card="currentPlotCard"
+    />
+    <!-- リーダーが陰謀カードを渡す -->
+    <choice-plot-card
+      v-else-if="stepChoiceCard"
+      class="me"
+      :plot-cards="allPlayerTakenPlotCards"
+      :has-responsibility-card="hasResponsibilityCard"
+      @selected-card="selectedCard"
+    />
     <!-- リーダーがミッション遂行メンバーを選択 -->
     <select-player
       v-else-if="stepSelecting"
@@ -24,7 +38,7 @@
     />
     <!-- メンバー確定 投票 -->
     <player-vote
-      v-else-if="stepVoting && !isAccessUserVoted"
+      v-else-if="!isAccessUserVoted && (isEarlyLeader || stepVoting)"
       class="me"
       @voting="voting"
     />
@@ -66,17 +80,24 @@
       :fail-mission-count="failMissionCount"
       @restart-game="restartGame"
     />
+
+    <v-snackbar :value="showUsingCard" color="primary" rounded="pill" top>
+      {{ currentCardUser.name }} が {{ currentCard.name }} を使いました
+    </v-snackbar>
   </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Card } from "@/types";
 import { Step, GameState } from "@/utils/GameState";
 import CountDownTimer, {
   oneMinute,
 } from "@/components/main/CountDownTimer.vue";
 import PlayerRobby from "@/components/main/PlayerRobby.vue";
+import PlotCard from "@/components/main/PlotCard.vue";
 import SelectPlayer from "@/components/main/SelectPlayer.vue";
+import ChoicePlotCard from "@/components/main/ChoicePlotCard.vue";
 import PlayerVote from "@/components/main/PlayerVote.vue";
 import VoteResult from "@/components/main/VoteResult.vue";
 import MissionExecute from "@/components/main/MissionExecute.vue";
@@ -87,7 +108,9 @@ import GameResult from "@/components/main/GameResult.vue";
   components: {
     CountDownTimer,
     PlayerRobby,
+    PlotCard,
     SelectPlayer,
+    ChoicePlotCard,
     PlayerVote,
     VoteResult,
     MissionExecute,
@@ -97,6 +120,7 @@ import GameResult from "@/components/main/GameResult.vue";
 })
 export default class MainView extends Vue {
   remainTime = 9999;
+  showUsingCard = false;
 
   @Prop({ type: Object, required: true }) gameState!: GameState;
 
@@ -108,6 +132,18 @@ export default class MainView extends Vue {
   }
   get stepSelecting() {
     return this.currentStep === "選択";
+  }
+  get stepObserve() {
+    return this.currentStep === "立ち聞き";
+  }
+  get stepOpenUp() {
+    return this.currentStep === "情報開示";
+  }
+  get stepChoiceCard() {
+    return this.currentStep === "カード選択";
+  }
+  get stepEarlyVoting() {
+    return this.currentStep === "早期投票";
   }
   get stepVoting() {
     return this.currentStep === "投票";
@@ -125,17 +161,57 @@ export default class MainView extends Vue {
     return this.currentStep === "終了";
   }
 
+  get currentTiming() {
+    return this.gameState.currentTiming;
+  }
+  get timingBeforeDistribute() {
+    return this.currentTiming === "配布前";
+  }
+  get timingBeforeSelect() {
+    return this.currentTiming === "選択前";
+  }
+  get timingBeforeVote() {
+    return this.currentTiming === "投票前";
+  }
+  get timingAfterVote() {
+    return this.currentTiming === "投票後";
+  }
+  get timingBeforeExcecute() {
+    return this.currentTiming === "遂行前";
+  }
+  get timingAfterExcecute() {
+    return this.currentTiming === "遂行後";
+  }
+
+  get currentPlotCard() {
+    return this.gameState.currentPhasePlotCard;
+  }
+  get currentCardUser() {
+    return this.gameState.state.currentCardUser || {};
+  }
+  get currentCard() {
+    return this.gameState.state.currentCard || {};
+  }
   get accessUserID() {
     return this.$whim.accessUser.id;
   }
   get isAccessUserLeader() {
     return this.gameState.currentLeader?.id === this.accessUserID;
   }
+  get isEarlyLeader() {
+    return this.gameState.isEarlyLeader(this.accessUserID);
+  }
   get isPlayerReady() {
     return this.gameState.getPlayer(this.accessUserID)?.canStarted || false;
   }
   get isSpy() {
     return this.gameState.isSpyPlayer(this.accessUserID);
+  }
+  get allPlayerTakenPlotCards() {
+    return this.gameState.state.allPlayerTakenPlotCards;
+  }
+  get hasResponsibilityCard() {
+    return this.gameState.hasResponsibilityCard(this.accessUserID);
   }
   get isAccessUserVoted() {
     return this.gameState.isCurrentMissionPlayerVoted(this.accessUserID);
@@ -199,6 +275,9 @@ export default class MainView extends Vue {
       case "選択":
         this.remainTime = 5;
         break;
+      case "早期投票":
+        this.remainTime = 1;
+        break;
       case "投票":
         this.remainTime = 3;
         break;
@@ -218,6 +297,12 @@ export default class MainView extends Vue {
     this.timerRestart();
   }
 
+  @Watch("currentCard.id")
+  onChangedCurrentCard(newCard: Card | undefined, oldCard: Card | undefined) {
+    console.log("newCard", newCard?.id, "oldCard", oldCard?.id);
+    this.showUsingCard = newCard ? newCard.id === oldCard?.id : false;
+  }
+
   timerRestart() {
     if (!this.isAccessUserLeader) {
       return;
@@ -231,6 +316,10 @@ export default class MainView extends Vue {
     switch (this.gameState.currentStep) {
       case "選択":
         this.gameState.autoSelectMissionMember();
+        this.assignState();
+        break;
+      case "早期投票":
+        this.gameState.autoEarlyVote();
         this.assignState();
         break;
       case "投票":
@@ -252,6 +341,10 @@ export default class MainView extends Vue {
         this.nextPhase();
         break;
     }
+  }
+  selectedCard(card: Card) {
+    this.gameState.moveCard(card, this.accessUserID);
+    this.assignState();
   }
   voting(approve: boolean) {
     this.gameState.currentMissionVote(this.accessUserID, approve);

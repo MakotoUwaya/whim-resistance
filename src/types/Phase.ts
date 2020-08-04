@@ -1,6 +1,7 @@
-import { Mission } from '@/types';
+import { Card, Mission } from '@/types';
 
 export type Phase = {
   missions?: Mission[];
-  missionCountExceeded?: boolean;
+  missionCountExceeded: boolean;
+  plotCards: Card[];
 };

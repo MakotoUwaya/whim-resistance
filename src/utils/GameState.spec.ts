@@ -242,11 +242,11 @@ describe('Phase/Missionのテスト', () => {
         state.setCanStartedPlayer(`hoge_id${j}`);
       }
       state.startGame();
-      for (let l = 0; l < 4; l++) {
-        state.next();
-      }
-      for (let k = 1; k <= i; k++) {
-        state.currentMissionVote(`hoge_id${k}`, false);
+      for (let l = 1; l <= 5; l++) {
+        for (let k = 1; k <= i; k++) {
+          state.currentMissionVote(`hoge_id${k}`, false);
+        }
+        if (l < 5) state.next();
       }
       expect(state.currentPhase?.missionCountExceeded).toBe(true);
     }

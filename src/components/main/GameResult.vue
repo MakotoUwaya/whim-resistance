@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row class="justify-center">
-      <v-img :src="resultImage" :max-width="400" v-bind="attrs" v-on="on" />
+      <v-img :src="resultImage" :max-width="400" />
     </v-row>
     <v-row class="justify-center">
       <span class="subtitle">
