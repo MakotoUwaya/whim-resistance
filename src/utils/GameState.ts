@@ -191,6 +191,9 @@ export class GameState {
     return this.failCount(this.currentMission);
   }
   /* Mission computed */
+  get spotLightPlayer() {
+    return this.state.spotLightPlayer;
+  }
 
   /* GameState method */
 
@@ -274,11 +277,7 @@ export class GameState {
     this.state.isStarted = true;
   }
   next() {
-    this.state.currentVoteChecked = false;
-    this.state.currentMissionResultChecked = false;
-    this.state.currentCard = null;
-    this.state.currentCardUser = null;
-    this.state.canOverheardConversation = null;
+    this.refreshState();
     if (
       !this.currentPhase ||
       this.isSuccess(this.currentPhase) ||
@@ -294,6 +293,14 @@ export class GameState {
       return;
     }
     this.nextMission(this.currentPhase, nextMissionLeader);
+  }
+  refreshState() {
+    this.state.currentVoteChecked = false;
+    this.state.currentMissionResultChecked = false;
+    this.state.currentCard = null;
+    this.state.currentCardUser = null;
+    this.state.canOverheardConversation = null;
+    this.state.spotLightPlayer = null;
   }
   isSpyPlayer(playerID: string) {
     const player = this.getPlayer(playerID);
@@ -354,6 +361,9 @@ export class GameState {
   }
   hasKeepingCloseEyeOnYouCard(playerID: string) {
     return this.hasCard(playerID, '監視者');
+  }
+  hasInTheSpotlightCard(playerID: string) {
+    return this.hasCard(playerID, '注目の的');
   }
 
   /* Phase method */
@@ -500,7 +510,6 @@ export class GameState {
       );
       if (!member) return;
       member.isPublic = true;
-      console.log(member.isPublic);
     } else if (card.name === '立ち聞きされた会話') {
       const prevPositionPlayer = this.prevPositionPlayer(player);
       const nextPositionPlayer = this.nextPositionPlayer(player);
@@ -513,14 +522,13 @@ export class GameState {
       this.state.openUpViewer = null;
       this.state.openUpExecuting = true;
     } else if (card.name === '注目の的') {
-      // NOTE: ミッションメンバーの先頭の人を自動的に公開している
-      // TODO: ユーザーが自由に選べるようにする
-      const members = this.currentMission?.members;
-      if (!members) return;
-      for (const member of members) {
-        member.isPublic = true;
-        break;
-      }
+      if (!targetPlayer) return;
+      const member = this.currentMission?.members?.find(
+        (m) => m.player.id === targetPlayer.id
+      );
+      if (!member) return;
+      member.isPublic = true;
+      this.state.spotLightPlayer = targetPlayer;
     } else if (card.name === '信用の確立') {
       this.state.currentCardUser = this.currentLeader;
       this.state.openUpViewer = null;

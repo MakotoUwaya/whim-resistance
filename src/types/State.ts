@@ -19,4 +19,6 @@ export type State = {
   // Plot_OpenUp, Plot_EstablishConfidence
   openUpViewer?: Player | null;
   openUpExecuting?: boolean;
+  // Plot_InTheSpotlight
+  spotLightPlayer?: Player | null;
 };

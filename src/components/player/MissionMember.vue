@@ -1,16 +1,24 @@
 <template>
   <div class="member-mark">
-    <v-btn class="ma-2" fab x-large dark color="success">
+    <v-btn
+      class="ma-2"
+      fab
+      x-large
+      dark
+      :color="isSpotLightPlayer ? 'error' : 'success'"
+    >
       <v-icon>mdi-bullseye-arrow</v-icon>
     </v-btn>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
-export default class MissionMember extends Vue {}
+export default class MissionMember extends Vue {
+  @Prop({ type: Boolean, default: false }) isSpotLightPlayer?: boolean;
+}
 </script>
 
 <style lang="scss" scoped>

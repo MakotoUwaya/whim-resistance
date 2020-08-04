@@ -26,7 +26,10 @@
     />
 
     <!-- ミッションメンバー表示 -->
-    <mission-member v-if="!stepFinish && isMissionPlayerAdded" />
+    <mission-member
+      v-if="!stepFinish && isMissionPlayerAdded"
+      :is-spot-light-player="isSpotLightPlayer"
+    />
 
     <!-- ゲーム開始前 待機状態 -->
     <!-- リーダーが陰謀カードを渡す -->
@@ -83,6 +86,15 @@
       :game-state="gameState"
     />
     <!-- ミッション開始 -->
+    <public-mission-status
+      v-else-if="
+        timingBeforeExcecute &&
+        hasInTheSpotlightCard &&
+        isMissionMember &&
+        !isMe
+      "
+      @public-status="publicStatus"
+    />
     <executing-status
       v-else-if="
         stepExecuting &&
@@ -93,6 +105,7 @@
     <!-- ミッション結果確認 -->
     <public-mission-result
       v-else-if="stepExecuted && isMissionMember"
+      :is-spot-light-player="isSpotLightPlayer"
       :can-public="hasKeepingCloseEyeOnYouCard"
       :is-mission-player-success="isMissionPlayerSuccess"
       :is-public-result="isPublicMissionMember"
@@ -119,6 +132,7 @@ import VotingEarlyStatus from "@/components/player/VotingEarlyStatus.vue";
 import VotingStatus from "@/components/player/VotingStatus.vue";
 import ApproveResult from "@/components/player/ApproveResult.vue";
 import ExecutingStatus from "@/components/player/ExecutingStatus.vue";
+import PublicMissionStatus from "@/components/player/PublicMissionStatus.vue";
 import PublicMissionResult from "@/components/player/PublicMissionResult.vue";
 
 @Component({
@@ -134,6 +148,7 @@ import PublicMissionResult from "@/components/player/PublicMissionResult.vue";
     VotingStatus,
     ApproveResult,
     ExecutingStatus,
+    PublicMissionStatus,
     PublicMissionResult,
   },
 })
@@ -297,8 +312,14 @@ export default class PlayerView extends Vue {
   get hasKeepingCloseEyeOnYouCard() {
     return this.gameState.hasKeepingCloseEyeOnYouCard(this.accessUserID);
   }
+  get hasInTheSpotlightCard() {
+    return this.gameState.hasInTheSpotlightCard(this.accessUserID);
+  }
   get isPublicMissionMember() {
     return this.gameState.isPublicCurrentMissionMember(this.displayUser.id);
+  }
+  get isSpotLightPlayer() {
+    return this.gameState.spotLightPlayer?.id === this.displayUser.id;
   }
 
   usingCard(card: Card) {
@@ -317,6 +338,14 @@ export default class PlayerView extends Vue {
   }
   setOpenUp() {
     this.gameState.state.openUpViewer = this.displayPlayer;
+    this.$whim.assignState(this.gameState.state);
+  }
+  publicStatus() {
+    const card = this.accessPlayer?.cards?.find(
+      (c) => !c.used && c.name === "注目の的"
+    );
+    if (!card) return;
+    this.gameState.usingCard(card, this.accessPlayer, this.displayPlayer);
     this.$whim.assignState(this.gameState.state);
   }
   publicResult() {

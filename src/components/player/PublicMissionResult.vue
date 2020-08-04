@@ -1,7 +1,7 @@
 <template>
   <v-row class="justify-center">
     <v-img
-      v-if="isPublicResult && isCardUser"
+      v-if="isSpotLightPlayer || (isPublicResult && isCardUser)"
       :src="missionResultImage"
       :max-width="200"
     />
@@ -32,6 +32,7 @@ export default class PublicMissionResult extends Vue {
   isCardUser = false;
 
   @Prop({ type: Boolean, default: false }) isMissionPlayerSuccess!: boolean;
+  @Prop({ type: Boolean, default: false }) isSpotLightPlayer?: boolean;
   @Prop({ type: Boolean, default: false }) canPublic!: boolean;
   @Prop({ type: Boolean, default: false }) isPublicResult!: boolean;
   @Prop({ type: Boolean, default: false }) isMe!: boolean;
