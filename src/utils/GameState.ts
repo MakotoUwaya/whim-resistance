@@ -124,6 +124,9 @@ export class GameState {
   get currentMission() {
     return this.phaseLatestMission(this.currentPhase);
   }
+  get currentMissionIndex() {
+    return this.currentPhase?.missions?.length || 1;
+  }
   get currentLeader() {
     return this.currentMission?.leader;
   }
@@ -488,6 +491,7 @@ export class GameState {
     this.state.currentCardUser = player;
 
     if (card.name === '強力なリーダー') {
+      this.currentPhase?.missions?.pop();
       this.setCurrentMissionLeader(player);
     } else if (card.name === '責任者') {
       if (!this.state.players) return;
