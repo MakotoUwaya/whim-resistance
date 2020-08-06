@@ -9,6 +9,13 @@
       :remain-time="currentRemainTime"
       @time-up="timeUp"
     />
+    <!-- スコアボード -->
+    <score-board
+      v-if="!stepWaiting"
+      :success-mission-count="successMissionCount"
+      :fail-mission-count="failMissionCount"
+      :current-mission-index="currentMissionIndex"
+    />
     <!-- ゲーム開始前 待機状態 -->
     <player-robby
       v-if="stepWaiting"
@@ -94,6 +101,7 @@ import { Step, GameState } from "@/utils/GameState";
 import CountDownTimer, {
   oneMinute,
 } from "@/components/main/CountDownTimer.vue";
+import ScoreBoard from "@/components/main/ScoreBoard.vue";
 import PlayerRobby from "@/components/main/PlayerRobby.vue";
 import PlotCard from "@/components/main/PlotCard.vue";
 import SelectPlayer from "@/components/main/SelectPlayer.vue";
@@ -107,6 +115,7 @@ import GameResult from "@/components/main/GameResult.vue";
 @Component({
   components: {
     CountDownTimer,
+    ScoreBoard,
     PlayerRobby,
     PlotCard,
     SelectPlayer,
@@ -248,6 +257,9 @@ export default class MainView extends Vue {
   }
   get failMissionCount() {
     return this.gameState.failMissionCount;
+  }
+  get currentMissionIndex() {
+    return this.gameState.currentMissionIndex;
   }
   get isResistanceWin() {
     return this.gameState.isResistanceWin;
